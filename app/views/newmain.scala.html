@@ -13,7 +13,7 @@
 * License for the specific language governing permissions and limitations under
 * the License.
 *@
-@(title: String, page: String)(content: Html)
+@(realm: com.linkedin.drelephant.RealmContext, title: String, page: String)(content: Html)
 @import java.lang.Boolean; var analytics = false
 @(analytics = play.Play.application().configuration().getBoolean("enable.analytics", false))
 

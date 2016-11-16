@@ -14,14 +14,14 @@
 * the License.
 *@
 
-@(flowDefId: String, graphType: String, results: Html)
+@(realm: com.linkedin.drelephant.RealmContext, flowDefId: String, graphType: String, results: Html)
 
-@main("Dr. Elephant - Flow History", "flowhistory") {
+@main(realm, "Dr. Elephant - Flow History", "flowhistory") {
 
   <!-- The Search panel-->
   @tags.column(12) {
     @tags.panel(){ Flow History } {
-      <form id="flow-history-form" role="form" method="get" action="@routes.Application.oldFlowHistory()">
+      <form id="flow-history-form" role="form" method="get" action="@routes.Application.oldFlowHistory(realm)">
         <div class="form-group">
           <label for="form-flow-def-idurl">Flow Definition URL/ID</label>
           <input type="text" class="form-control" id="form-flow-def-id" name="flow-def-id" placeholder="Flow Definition URL/ID" value=@flowDefId>

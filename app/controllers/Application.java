@@ -22,6 +22,7 @@ import com.avaje.ebean.Query;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.RealmContext;
 import com.linkedin.drelephant.analysis.Metrics;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.util.Utils;
@@ -136,7 +137,7 @@ public class Application extends Controller {
    *
    * Displays the latest jobs which were analysed in the last 24 hours.
    */
-  public static Result dashboard() {
+  public static Result dashboard(RealmContext realm) {
     long now = System.currentTimeMillis();
     long finishDate = now - DAY;
 
@@ -164,8 +165,8 @@ public class Application extends Controller {
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
         .findList();
 
-    return ok(homePage.render(_numJobsAnalyzed, _numJobsSevere, _numJobsCritical,
-        searchResults.render("Latest analysis", results)));
+    return ok(homePage.render(realm, _numJobsAnalyzed, _numJobsSevere, _numJobsCritical,
+        searchResults.render(realm, "Latest analysis", results)));
   }
 
   /**
@@ -213,12 +214,12 @@ public class Application extends Controller {
   /**
    * Given a (possibly) partial scheduler info id, try to find the closest existing id.
    */
-  private static IdUrlPair bestSchedulerInfoMatchGivenPartialId(String partialSchedulerInfoId, String schedulerInfoIdField) {
+  private static IdUrlPair bestSchedulerInfoMatchGivenPartialId(RealmContext realm, String partialSchedulerInfoId, String schedulerInfoIdField) {
     IdUrlPair schedulerInfoPair;
     // check for exact match
     schedulerInfoPair = bestSchedulerInfoMatchLikeValue(partialSchedulerInfoId, schedulerInfoIdField);
     // check for suffix match if feature isn't disabled
-    if (schedulerInfoPair == null && ElephantContext.instance().getGeneralConf().getBoolean(SEARCH_MATCHES_PARTIAL_CONF, true)) {
+    if (schedulerInfoPair == null && realm.context().getGeneralConf().getBoolean(SEARCH_MATCHES_PARTIAL_CONF, true)) {
       schedulerInfoPair = bestSchedulerInfoMatchLikeValue(String.format("%s%%", partialSchedulerInfoId), schedulerInfoIdField);
     }
     // if we didn't find anything just give a buest guess
@@ -231,7 +232,7 @@ public class Application extends Controller {
   /**
    * Controls the Search Feature
    */
-  public static Result search() {
+  public static Result search(RealmContext realm) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String appId = form.get(APP_ID);
     appId = appId != null ? appId.trim() : "";
@@ -249,9 +250,9 @@ public class Application extends Controller {
               "*")
           .where()
           .idEq(appId).findUnique();
-      return ok(searchPage.render(null, jobDetails.render(result)));
+      return ok(searchPage.render(realm, null, jobDetails.render(realm, result)));
     } else if (Utils.isSet(partialFlowExecId)) {
-      IdUrlPair flowExecPair = bestSchedulerInfoMatchGivenPartialId(partialFlowExecId, AppResult.TABLE.FLOW_EXEC_ID);
+      IdUrlPair flowExecPair = bestSchedulerInfoMatchGivenPartialId(realm, partialFlowExecId, AppResult.TABLE.FLOW_EXEC_ID);
       List<AppResult> results = AppResult.find
           .select(AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_EXEC_ID)
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
@@ -259,7 +260,7 @@ public class Application extends Controller {
           .eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecPair.getId())
           .findList();
       Map<IdUrlPair, List<AppResult>> map = ControllerUtil.groupJobs(results, ControllerUtil.GroupBy.JOB_EXECUTION_ID);
-      return ok(searchPage.render(null, flowDetails.render(flowExecPair, map)));
+      return ok(searchPage.render(realm, null, flowDetails.render(realm, flowExecPair, map)));
     }
 
     // Prepare pagination of results
@@ -286,12 +287,12 @@ public class Application extends Controller {
         .findList();
     paginationStats.setQueryString(getQueryString());
     if (results.isEmpty() || currentPage > paginationStats.computePaginationBarEndIndex(results.size())) {
-      return ok(searchPage.render(null, jobDetails.render(null)));
+      return ok(searchPage.render(realm, null, jobDetails.render(realm, null)));
     } else {
       List<AppResult> resultsToDisplay = results.subList((currentPage - paginationBarStartIndex) * pageLength,
               Math.min(results.size(), (currentPage - paginationBarStartIndex + 1) * pageLength));
-      return ok(searchPage.render(paginationStats, searchResults.render(
-              String.format("Results: Showing %,d of %,d", resultsToDisplay.size(), query.findRowCount()), resultsToDisplay)));
+      return ok(searchPage.render(realm, paginationStats, searchResults.render(
+              realm, String.format("Results: Showing %,d of %,d", resultsToDisplay.size(), query.findRowCount()), resultsToDisplay)));
     }
   }
 
@@ -419,7 +420,7 @@ public class Application extends Controller {
   /**
    Controls the Compare Feature
    */
-  public static Result compare() {
+  public static Result compare(RealmContext realm) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String partialFlowExecId1 = form.get(COMPARE_FLOW_ID1);
     partialFlowExecId1 = (partialFlowExecId1 != null) ? partialFlowExecId1.trim() : null;
@@ -429,8 +430,8 @@ public class Application extends Controller {
     List<AppResult> results1 = null;
     List<AppResult> results2 = null;
     if (partialFlowExecId1 != null && !partialFlowExecId1.isEmpty() && partialFlowExecId2 != null && !partialFlowExecId2.isEmpty()) {
-      IdUrlPair flowExecIdPair1 = bestSchedulerInfoMatchGivenPartialId(partialFlowExecId1, AppResult.TABLE.FLOW_EXEC_ID);
-      IdUrlPair flowExecIdPair2 = bestSchedulerInfoMatchGivenPartialId(partialFlowExecId2, AppResult.TABLE.FLOW_EXEC_ID);
+      IdUrlPair flowExecIdPair1 = bestSchedulerInfoMatchGivenPartialId(realm, partialFlowExecId1, AppResult.TABLE.FLOW_EXEC_ID);
+      IdUrlPair flowExecIdPair2 = bestSchedulerInfoMatchGivenPartialId(realm, partialFlowExecId2, AppResult.TABLE.FLOW_EXEC_ID);
       results1 = AppResult.find
           .select(AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_DEF_ID + "," + AppResult.TABLE.JOB_DEF_URL
               + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL)
@@ -445,7 +446,7 @@ public class Application extends Controller {
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
           .findList();
     }
-    return ok(comparePage.render(compareResults.render(compareFlows(results1, results2))));
+    return ok(comparePage.render(realm, compareResults.render(realm, compareFlows(results1, results2))));
   }
 
   /**
@@ -499,15 +500,15 @@ public class Application extends Controller {
   /**
    * Returns the new version of flow history
    */
-  public static Result flowHistory() {
-    return getFlowHistory(Version.NEW);
+  public static Result flowHistory(RealmContext realm) {
+    return getFlowHistory(realm, Version.NEW);
   }
 
   /**
    * Returns the old version of flow history
    */
-  public static Result oldFlowHistory() {
-    return getFlowHistory(Version.OLD);
+  public static Result oldFlowHistory(RealmContext realm) {
+    return getFlowHistory(realm, Version.OLD);
   }
 
   /**
@@ -516,7 +517,7 @@ public class Application extends Controller {
    * @param version Can be either new or old
    * @return The flowhistory page based on the version provided
    */
-  private static Result getFlowHistory(Version version) {
+  private static Result getFlowHistory(RealmContext realm, Version version) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String partialFlowDefId = form.get(FLOW_DEF_ID);
     partialFlowDefId = (partialFlowDefId != null) ? partialFlowDefId.trim() : null;
@@ -533,14 +534,14 @@ public class Application extends Controller {
     if (!Utils.isSet(partialFlowDefId)) {
       if (version.equals(Version.NEW)) {
         return ok(flowHistoryPage
-            .render(partialFlowDefId, graphType, flowHistoryResults.render(null, null, null, null)));
+            .render(realm, partialFlowDefId, graphType, flowHistoryResults.render(realm, null, null, null, null)));
       } else {
         return ok(
-            oldFlowHistoryPage.render(partialFlowDefId, graphType, oldFlowHistoryResults.render(null, null, null, null)));
+            oldFlowHistoryPage.render(realm, partialFlowDefId, graphType, oldFlowHistoryResults.render(realm, null, null, null, null)));
       }
     }
 
-    IdUrlPair flowDefPair = bestSchedulerInfoMatchGivenPartialId(partialFlowDefId, AppResult.TABLE.FLOW_DEF_ID);
+    IdUrlPair flowDefPair = bestSchedulerInfoMatchGivenPartialId(realm, partialFlowDefId, AppResult.TABLE.FLOW_DEF_ID);
 
     List<AppResult> results;
 
@@ -613,23 +614,23 @@ public class Application extends Controller {
 
     if (version.equals(Version.NEW)) {
       if (graphType.equals("heuristics")) {
-        return ok(flowHistoryPage.render(flowDefPair.getId(), graphType,
-            flowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
+        return ok(flowHistoryPage.render(realm, flowDefPair.getId(), graphType,
+            flowHistoryResults.render(realm, flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
-          return ok(flowHistoryPage.render(flowDefPair.getId(), graphType, flowMetricsHistoryResults
-              .render(flowDefPair, graphType, executionMap, idPairToJobNameMap, flowExecTimeList)));
+          return ok(flowHistoryPage.render(realm, flowDefPair.getId(), graphType, flowMetricsHistoryResults
+              .render(realm, flowDefPair, graphType, executionMap, idPairToJobNameMap, flowExecTimeList)));
       }
     } else {
       if (graphType.equals("heuristics")) {
-        return ok(oldFlowHistoryPage.render(flowDefPair.getId(), graphType,
-            oldFlowHistoryResults.render(flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
+        return ok(oldFlowHistoryPage.render(realm, flowDefPair.getId(), graphType,
+            oldFlowHistoryResults.render(realm, flowDefPair, executionMap, idPairToJobNameMap, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
         if (hasSparkJob) {
           return notFound("Cannot plot graph for " + graphType + " since it contains a spark job. " + graphType
               + " graphs are not supported for spark right now");
         } else {
-          return ok(oldFlowHistoryPage.render(flowDefPair.getId(), graphType, oldFlowMetricsHistoryResults
-                  .render(flowDefPair, graphType, executionMap, idPairToJobNameMap, flowExecTimeList)));
+          return ok(oldFlowHistoryPage.render(realm, flowDefPair.getId(), graphType, oldFlowMetricsHistoryResults
+                  .render(realm, flowDefPair, graphType, executionMap, idPairToJobNameMap, flowExecTimeList)));
         }
       }
     }
@@ -639,15 +640,15 @@ public class Application extends Controller {
   /**
    * Controls Job History. Displays at max MAX_HISTORY_LIMIT executions. Old version of the job history
    */
-  public static Result oldJobHistory() {
-    return getJobHistory(Version.OLD);
+  public static Result oldJobHistory(RealmContext realm) {
+    return getJobHistory(realm, Version.OLD);
   }
 
   /**
    * Controls Job History. Displays at max MAX_HISTORY_LIMIT executions. New version of the job history
    */
-  public static Result jobHistory() {
-    return getJobHistory(Version.NEW);
+  public static Result jobHistory(RealmContext realm) {
+    return getJobHistory(realm, Version.NEW);
   }
 
   /**
@@ -656,7 +657,7 @@ public class Application extends Controller {
    * @param version The version of job history to return
    * @return The job history page based on the version.
    */
-  private static Result getJobHistory(Version version) {
+  private static Result getJobHistory(RealmContext realm, Version version) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String partialJobDefId = form.get(JOB_DEF_ID);
     partialJobDefId = (partialJobDefId != null) ? partialJobDefId.trim() : null;
@@ -672,12 +673,12 @@ public class Application extends Controller {
     if (!Utils.isSet(partialJobDefId)) {
       if (version.equals(Version.NEW)) {
         return ok(
-            jobHistoryPage.render(partialJobDefId, graphType, jobHistoryResults.render(null, null, -1, null)));
+            jobHistoryPage.render(realm, partialJobDefId, graphType, jobHistoryResults.render(realm, null, null, -1, null)));
       } else {
-        return ok(oldJobHistoryPage.render(partialJobDefId, graphType, oldJobHistoryResults.render(null, null, -1, null)));
+        return ok(oldJobHistoryPage.render(realm, partialJobDefId, graphType, oldJobHistoryResults.render(realm, null, null, -1, null)));
       }
     }
-    IdUrlPair jobDefPair = bestSchedulerInfoMatchGivenPartialId(partialJobDefId, AppResult.TABLE.JOB_DEF_ID);
+    IdUrlPair jobDefPair = bestSchedulerInfoMatchGivenPartialId(realm, partialJobDefId, AppResult.TABLE.JOB_DEF_ID);
 
     List<AppResult> results;
 
@@ -744,22 +745,22 @@ public class Application extends Controller {
     }
     if (version.equals(Version.NEW)) {
       if (graphType.equals("heuristics")) {
-        return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
-            jobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
+        return ok(jobHistoryPage.render(realm, jobDefPair.getId(), graphType,
+            jobHistoryResults.render(realm, jobDefPair, executionMap, maxStages, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
-          return ok(jobHistoryPage.render(jobDefPair.getId(), graphType,
-              jobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
+          return ok(jobHistoryPage.render(realm, jobDefPair.getId(), graphType,
+              jobMetricsHistoryResults.render(realm, jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
       }
     } else {
       if (graphType.equals("heuristics")) {
-        return ok(oldJobHistoryPage.render(jobDefPair.getId(), graphType,
-            oldJobHistoryResults.render(jobDefPair, executionMap, maxStages, flowExecTimeList)));
+        return ok(oldJobHistoryPage.render(realm, jobDefPair.getId(), graphType,
+            oldJobHistoryResults.render(realm, jobDefPair, executionMap, maxStages, flowExecTimeList)));
       } else if (graphType.equals("resources") || graphType.equals("time")) {
         if (hasSparkJob) {
           return notFound("Resource and time graph are not supported for spark right now");
         } else {
-          return ok(oldJobHistoryPage.render(jobDefPair.getId(), graphType,
-              oldJobMetricsHistoryResults.render(jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
+          return ok(oldJobHistoryPage.render(realm, jobDefPair.getId(), graphType,
+              oldJobMetricsHistoryResults.render(realm, jobDefPair, graphType, executionMap, maxStages, flowExecTimeList)));
         }
       }
     }
@@ -772,14 +773,14 @@ public class Application extends Controller {
    * @param version The version for which help page has to be returned
    * @return The help page based on the version
    */
-  private static Result getHelp(Version version) {
+  private static Result getHelp(RealmContext realm, Version version) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String topic = form.get("topic");
     Html page = null;
     String title = "Help";
     if (topic != null && !topic.isEmpty()) {
       // check if it is a heuristic help
-      page = ElephantContext.instance().getHeuristicToView().get(topic);
+      page = realm.context().getHeuristicToView().get(topic);
 
       // check if it is a metrics help
       if (page == null) {
@@ -792,23 +793,23 @@ public class Application extends Controller {
     }
 
     if (version.equals(Version.NEW)) {
-      return ok(helpPage.render(title, page));
+      return ok(helpPage.render(realm, title, page));
     }
-    return ok(oldHelpPage.render(title, page));
+    return ok(oldHelpPage.render(realm, title, page));
   }
 
   /**
    * Controls the new Help Page
    */
-  public static Result oldHelp() {
-    return getHelp(Version.OLD);
+  public static Result oldHelp(RealmContext realm) {
+    return getHelp(realm, Version.OLD);
   }
 
   /**
    * Controls the old Help Page
    */
-  public static Result help() {
-    return getHelp(Version.NEW);
+  public static Result help(RealmContext realm) {
+    return getHelp(realm, Version.NEW);
   }
 
 
@@ -840,7 +841,7 @@ public class Application extends Controller {
    * Rest API for searching a particular job information
    * E.g, localhost:8080/rest/job?id=xyz
    */
-  public static Result restAppResult(String id) {
+  public static Result restAppResult(RealmContext realm, String id) {
 
     if (id == null || id.isEmpty()) {
       return badRequest("No job id provided.");
@@ -867,7 +868,7 @@ public class Application extends Controller {
    * Rest API for searching all jobs triggered by a particular Scheduler Job
    * E.g., localhost:8080/rest/jobexec?id=xyz
    */
-  public static Result restJobExecResult(String jobExecId) {
+  public static Result restJobExecResult(RealmContext realm, String jobExecId) {
 
     if (jobExecId == null || jobExecId.isEmpty()) {
       return badRequest("No job exec url provided.");
@@ -891,7 +892,7 @@ public class Application extends Controller {
    * Rest API for searching all jobs under a particular flow execution
    * E.g., localhost:8080/rest/flowexec?id=xyz
    */
-  public static Result restFlowExecResult(String flowExecId) {
+  public static Result restFlowExecResult(RealmContext realm, String flowExecId) {
 
     if (flowExecId == null || flowExecId.isEmpty()) {
       return badRequest("No flow exec url provided.");
@@ -929,7 +930,7 @@ public class Application extends Controller {
    *
    * http://localhost:8080/rest/search?username=abc&job-type=HadoopJava
    */
-  public static Result restSearch() {
+  public static Result restSearch(RealmContext realm) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String appId = form.get(APP_ID);
     appId = appId != null ? appId.trim() : "";
@@ -992,7 +993,7 @@ public class Application extends Controller {
    * The Rest API for Compare Feature
    * E.g., localhost:8080/rest/compare?flow-exec-id1=abc&flow-exec-id2=xyz
    */
-  public static Result restCompare() {
+  public static Result restCompare(RealmContext realm) {
     DynamicForm form = Form.form().bindFromRequest(request());
     String flowExecId1 = form.get(COMPARE_FLOW_ID1);
     flowExecId1 = (flowExecId1 != null) ? flowExecId1.trim() : null;
@@ -1080,7 +1081,7 @@ public class Application extends Controller {
    * }
    * </pre>
    */
-  public static Result restFlowGraphData(String flowDefId) {
+  public static Result restFlowGraphData(RealmContext realm, String flowDefId) {
     JsonArray datasets = new JsonArray();
     if (flowDefId == null || flowDefId.isEmpty()) {
       return ok(new Gson().toJson(datasets));
@@ -1174,7 +1175,7 @@ public class Application extends Controller {
    * }
    * </pre>
    */
-  public static Result restJobGraphData(String jobDefId) {
+  public static Result restJobGraphData(RealmContext realm, String jobDefId) {
     JsonArray datasets = new JsonArray();
     if (jobDefId == null || jobDefId.isEmpty()) {
       return ok(new Gson().toJson(datasets));
@@ -1266,7 +1267,7 @@ public class Application extends Controller {
    *
    * </pre>
    */
-  public static Result restJobMetricsGraphData(String jobDefId) {
+  public static Result restJobMetricsGraphData(RealmContext realm, String jobDefId) {
     JsonArray datasets = new JsonArray();
     if (jobDefId == null || jobDefId.isEmpty()) {
       return ok(new Gson().toJson(datasets));
@@ -1339,7 +1340,7 @@ public class Application extends Controller {
    *        {"user":"payments","resourceUsed":18432,"resourceWasted":3447},
    *        {"user":"myu","resourceUsed":558211072,"resourceWasted":81573818}]
    */
-  public static Result restResourceUsageDataByUser(String startTime, String endTime) {
+  public static Result restResourceUsageDataByUser(RealmContext realm, String startTime, String endTime) {
     try {
       JsonArray datasets = new JsonArray();
       if(startTime.length() != endTime.length() ||
@@ -1405,7 +1406,7 @@ public class Application extends Controller {
    *}
    *]
    **/
-  public static Result restFlowMetricsGraphData(String flowDefId) {
+  public static Result restFlowMetricsGraphData(RealmContext realm, String flowDefId) {
     JsonArray datasets = new JsonArray();
     if (flowDefId == null || flowDefId.isEmpty()) {
       return ok(new Gson().toJson(datasets));

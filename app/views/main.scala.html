@@ -14,7 +14,7 @@
 * the License.
 *@
 
-@(title: String, page: String)(content: Html)
+@(realm: com.linkedin.drelephant.RealmContext, title: String, page: String)(content: Html)
 @import java.lang.Boolean; var analytics = false
 @(analytics=play.Play.application().configuration().getBoolean("enable.analytics", false))
 
@@ -58,12 +58,12 @@
 
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li@if(page == null || page.equals("dashboard")){ class="active"}><a href="/">Dashboard</a></li>
-            <li@if(page.equals("search")){ class="active"}><a href="/search">Search</a></li>
-            <li@if(page.equals("compare")){ class="active"}><a href="/compare">Compare</a></li>
-            <li@if(page.equals("flowhistory")){ class="active"}><a href="/flowhistory">Flow History</a></li>
-            <li@if(page.equals("jobhistory")){ class="active"}><a href="/jobhistory">Job History</a></li>
-            <li@if(page.equals("help")){ class="active"}><a href="/help">Help</a></li>
+            <li@if(page == null || page.equals("dashboard")){ class="active"}><a href="/@realm.unbind("realm")/">Dashboard</a></li>
+            <li@if(page.equals("search")){ class="active"}><a href="/@realm.unbind("realm")/search">Search</a></li>
+            <li@if(page.equals("compare")){ class="active"}><a href="/@realm.unbind("realm")/compare">Compare</a></li>
+            <li@if(page.equals("flowhistory")){ class="active"}><a href="/@realm.unbind("realm")/flowhistory">Flow History</a></li>
+            <li@if(page.equals("jobhistory")){ class="active"}><a href="/@realm.unbind("realm")/jobhistory">Job History</a></li>
+            <li@if(page.equals("help")){ class="active"}><a href="/@realm.unbind("realm")/help">Help</a></li>
           </ul>
         </div>
 

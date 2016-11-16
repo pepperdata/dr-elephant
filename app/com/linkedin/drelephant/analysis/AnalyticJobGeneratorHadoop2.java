@@ -56,6 +56,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private static final long TOKEN_UPDATE_INTERVAL =
       Statistics.MINUTE_IN_MS * 30 + new Random().nextLong() % (3 * Statistics.MINUTE_IN_MS);
 
+  private final ElephantContext context;
   private String _resourceManagerAddress;
   private long _lastTime = 0;
   private long _currentTime = 0;
@@ -65,6 +66,10 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private final ObjectMapper _objectMapper = new ObjectMapper();
 
   private final Queue<AnalyticJob> _retryQueue = new ConcurrentLinkedQueue<AnalyticJob>();
+
+  public AnalyticJobGeneratorHadoop2(ElephantContext context) {
+    this.context = context;
+  }
 
   public void updateResourceManagerAddresses() {
     if (Boolean.valueOf(configuration.get(IS_RM_HA_ENABLED))) {
@@ -219,11 +224,11 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         long finishTime = app.get("finishedTime").getLongValue();
 
         ApplicationType type =
-            ElephantContext.instance().getApplicationTypeForName(app.get("applicationType").getValueAsText());
+            context.getApplicationTypeForName(app.get("applicationType").getValueAsText());
 
         // If the application type is supported
         if (type != null) {
-          AnalyticJob analyticJob = new AnalyticJob();
+          AnalyticJob analyticJob = new AnalyticJob(context);
           analyticJob.setAppId(appId).setAppType(type).setUser(user).setName(name).setQueueName(queueName)
               .setTrackingUrl(trackingUrl).setStartTime(startTime).setFinishTime(finishTime);
 

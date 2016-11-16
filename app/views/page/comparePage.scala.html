@@ -14,7 +14,7 @@
 * the License.
 *@
 
-@(results: Html)
+@(realm: com.linkedin.drelephant.RealmContext, results: Html)
 
 @*
 * The layout of the compare page.
@@ -25,10 +25,10 @@
 * @param results The search results rendered according to compareResults
 *@
 
-@main("Dr. Elephant - Compare", "compare") {
+@main(realm, "Dr. Elephant - Compare", "compare") {
   @tags.column(3) {
     @tags.panel(){ Compare } {
-      <form id="compare-form" role="form" method="get" action="@routes.Application.compare()">
+      <form id="compare-form" role="form" method="get" action="@routes.Application.compare(realm)">
         <div class="form-group">
           <label for="form-flow-id-1">Flow Execution URL/ID 1</label>
           <input type="text" class="form-control" id="form-flow-id-1" name="flow-exec-id1" placeholder="Flow Exec URL/ID 1">

@@ -14,7 +14,7 @@
 * the License.
 *@
 
-@(flowExecPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.List[models.AppResult]])
+@(realm: com.linkedin.drelephant.RealmContext, flowExecPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.List[models.AppResult]])
 
 @*
 * Displays all the mr jobs belonging to a flow grouped by job exec url
@@ -38,7 +38,7 @@
         <div class="list-group well-lg">
           @for(result <- jobs) {
             <a class="list-group-item list-group-item-@result.severity.getBootstrapColor"
-               href="@routes.Application.search()?id=@result.id">
+               href="@routes.Application.search(realm)?id=@result.id">
               @tags.jobSummary(result)
             </a>
           }

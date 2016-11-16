@@ -20,6 +20,7 @@ import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -34,7 +35,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import mockit.Mocked;
+import com.linkedin.drelephant.ElephantContext;
+
 public class MapReduceFSFetcherHadoop2Test {
+
+  @Mocked(stubOutClassInitialization = true)
+  ElephantContext elephantContext = null;
 
   private static Document document9 = null;
   private static Document document10 = null;
@@ -132,7 +139,7 @@ public class MapReduceFSFetcherHadoop2Test {
               fetcherConf.getFetchersConfigurationData().get(0));
       Calendar timestamp = Calendar.getInstance();
       timestamp.set(2016, Calendar.JULY, 30);
-      AnalyticJob job = new AnalyticJob()
+      AnalyticJob job = new AnalyticJob(elephantContext)
               .setAppId("application_1461566847127_84624")
               .setFinishTime(timestamp.getTimeInMillis());
 

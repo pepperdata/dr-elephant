@@ -21,7 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.RealmContext;
 import com.linkedin.drelephant.analysis.ApplicationType;
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.JobType;
@@ -77,7 +77,7 @@ public class Web extends Controller {
   /**
   * Returns the json object for the dashboard summaries of jobs analzyed in last day.
   */
-  public static Result restDashboardSummaries() {
+  public static Result restDashboardSummaries(RealmContext realm) {
 
     long now = System.currentTimeMillis();
     long finishDate = now - DAY;
@@ -279,7 +279,7 @@ public class Web extends Controller {
    *}
    * </pre>
    * */
-  public static Result restApplicationSummariesForUser(String username) {
+  public static Result restApplicationSummariesForUser(RealmContext realm, String username) {
     JsonArray applicationSummaryArray = new JsonArray();
 
     List<AppResult> results = null;
@@ -358,7 +358,7 @@ public class Web extends Controller {
    *}
    * </pre>
    **/
-  public static Result restJobSummariesForUser(String username) {
+  public static Result restJobSummariesForUser(RealmContext realm, String username) {
 
     JsonArray jobSummaryArray = new JsonArray();
 
@@ -509,7 +509,7 @@ public class Web extends Controller {
    *}
    * </pre>
    */
-  public static Result restWorkflowSummariesForUser(String username) {
+  public static Result restWorkflowSummariesForUser(RealmContext realm, String username) {
     JsonArray workflowSummaryArray = new JsonArray();
     List<AppResult> results = null;
     if (username == null || username.isEmpty()) {
@@ -655,7 +655,7 @@ public class Web extends Controller {
    *}
    * </pre>
    */
-  public static Result restWorkflowFromFlowId(String flowId) {
+  public static Result restWorkflowFromFlowId(RealmContext realm, String flowId) {
 
     if (flowId==null || flowId.isEmpty()) {
       JsonObject parent = new JsonObject();
@@ -913,7 +913,7 @@ public class Web extends Controller {
    *
    * </pre>
    */
-  public static Result restJobFromJobId(String jobid) {
+  public static Result restJobFromJobId(RealmContext realm, String jobid) {
 
 
     if (jobid==null || jobid.isEmpty()) {
@@ -1120,7 +1120,7 @@ public class Web extends Controller {
    *}
    * </pre>
    */
-  public static Result restApplicationFromApplicationId(String applicationid) {
+  public static Result restApplicationFromApplicationId(RealmContext realm, String applicationid) {
 
     if (applicationid==null || applicationid.isEmpty()) {
       JsonObject parent = new JsonObject();
@@ -1305,12 +1305,12 @@ public class Web extends Controller {
    *}
    * </pre>
    */
-  public static Result restSearchOptions() {
+  public static Result restSearchOptions(RealmContext realm) {
     JsonObject searchOptions = new JsonObject();
     JsonArray jobCategory = new JsonArray();
     JsonArray severities = new JsonArray();
 
-    Map<ApplicationType, List<JobType>> applicationTypeListMap = ElephantContext.instance().getAppTypeToJobTypes();
+    Map<ApplicationType, List<JobType>> applicationTypeListMap = realm.context().getAppTypeToJobTypes();
 
     for (ApplicationType key : applicationTypeListMap.keySet()) {
       JsonObject applicationType = new JsonObject();
@@ -1323,7 +1323,7 @@ public class Web extends Controller {
         jobTypes.add(jobTypeNode);
       }
 
-      for (Heuristic heuristic : ElephantContext.instance().getHeuristicsForApplicationType(key)) {
+      for (Heuristic heuristic : realm.context().getHeuristicsForApplicationType(key)) {
         JsonObject heuristicNode = new JsonObject();
         heuristicNode.addProperty(JsonKeys.NAME, heuristic.getHeuristicConfData().getHeuristicName());
         heuristics.add(heuristicNode);
@@ -1371,7 +1371,7 @@ public class Web extends Controller {
    *  }
    * </pre>
    */
-  public static Result search() {
+  public static Result search(RealmContext realm) {
     DynamicForm form = Form.form().bindFromRequest(request());
     JsonObject parent = new JsonObject();
 

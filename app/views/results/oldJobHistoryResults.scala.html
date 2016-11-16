@@ -14,7 +14,7 @@
 * the License.
 *@
 
-@(jobDefPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.List[models.AppResult]], maxStages: Int,
+@(realm: com.linkedin.drelephant.RealmContext, jobDefPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.List[models.AppResult]], maxStages: Int,
     flowExecTimeList:java.util.List[Long])
 
 @import com.linkedin.drelephant.analysis.Severity
@@ -77,7 +77,7 @@
                 <td>
                 @if(i <= jobs.length) {
                   @for((appHeuristicResult, jobCount) <- jobs(i-1).yarnAppHeuristicResults.zipWithIndex) {
-                    <a class="hasTooltip" href='@routes.Application.search()?id=@appHeuristicResult.yarnAppResult.id'
+                    <a class="hasTooltip" href='@routes.Application.search(realm)?id=@appHeuristicResult.yarnAppResult.id'
                     style='color: @getSeverityColor(appHeuristicResult.severity);'>&#9673;
                       <!-- Table Tooltip Content -->
                       <div id="tooltip-div">

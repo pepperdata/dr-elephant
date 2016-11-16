@@ -59,7 +59,7 @@ public class AnalyticJobTest {
       throws Exception {
     try {
       // Setup analytic job
-      final AnalyticJob analyticJob = new AnalyticJob().
+      final AnalyticJob analyticJob = new AnalyticJob(elephantContext).
           setAppId(TEST_JOB_ID1).setAppType(new ApplicationType(TEST_APP_TYPE)).
           setFinishTime(1462178403).setStartTime(1462178412).setName(TEST_JOB_NAME).
           setQueueName(TEST_DEFAULT_QUEUE_NAME).setUser(TEST_USERNAME).setTrackingUrl(TEST_TRACKING_URL);

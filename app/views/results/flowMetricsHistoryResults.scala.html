@@ -13,7 +13,7 @@
 * License for the specific language governing permissions and limitations under
 * the License.
 *@
-@(flowDefPair: IdUrlPair, graphType: String, results: java.util.Map[IdUrlPair, java.util.Map[IdUrlPair, java.util.List[models.AppResult]]],
+@(realm: com.linkedin.drelephant.RealmContext, flowDefPair: IdUrlPair, graphType: String, results: java.util.Map[IdUrlPair, java.util.Map[IdUrlPair, java.util.List[models.AppResult]]],
     idPairToJobNameMap: java.util.Map[IdUrlPair, String], flowExecTimeList: java.util.List[Long])
 
   @import com.linkedin.drelephant.util.Utils;

@@ -43,6 +43,8 @@ import static play.test.Helpers.fakeApplication;
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
 
+import mockit.Mocked;
+import com.linkedin.drelephant.ElephantContext;
 
 /**
  * <p>
@@ -56,6 +58,9 @@ import static play.test.Helpers.testServer;
  */
 public class RestAPITest {
 
+  @Mocked(stubOutClassInitialization = true)
+  ElephantContext elephantContext = null;
+
   private static final Logger logger = LoggerFactory.getLogger(RestAPITest.class);
   private static FakeApplication fakeApp;
 
@@ -66,6 +71,8 @@ public class RestAPITest {
     dbConn.put(DB_DEFAULT_URL_KEY, DB_DEFAULT_URL_VALUE);
     dbConn.put(EVOLUTION_PLUGIN_KEY, EVOLUTION_PLUGIN_VALUE);
     dbConn.put(APPLY_EVOLUTIONS_DEFAULT_KEY, APPLY_EVOLUTIONS_DEFAULT_VALUE);
+
+    ElephantContext.add("test-realm", elephantContext);
 
     GlobalSettings gs = new GlobalSettings() {
       @Override

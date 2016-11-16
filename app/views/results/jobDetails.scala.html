@@ -14,7 +14,7 @@
 * the License.
 *@
 
-@(result: models.AppResult)
+@(realm: com.linkedin.drelephant.RealmContext, result: models.AppResult)
 
 @*
 * Displays complete info of the job.
@@ -98,7 +98,7 @@
         <table width="100%">
           <tr>
             <td>@tags.aggregatedMetrics(result)</td>
-            <td align="right"><a href="@routes.Application.oldHelp()?topic=Used Resources">[Explain]</a></td>
+            <td align="right"><a href="@routes.Application.oldHelp(realm)?topic=Used Resources">[Explain]</a></td>
           </tr>
         </table>
       </div>
@@ -115,7 +115,7 @@
             <thead><tr>
               <th colspan="2">
                 Severity: @yarnAppHeuristicResult.severity.getText
-                @if(yarnAppHeuristicResult.severity.getValue > 1){ <a href="@routes.Application.oldHelp()?topic=@helper.urlEncode(yarnAppHeuristicResult.heuristicName)">[Explain]</a> }
+                @if(yarnAppHeuristicResult.severity.getValue > 1){ <a href="@routes.Application.oldHelp(realm)?topic=@helper.urlEncode(yarnAppHeuristicResult.heuristicName)">[Explain]</a> }
               </th>
             </tr></thead>
             <tbody>

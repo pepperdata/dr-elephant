@@ -68,7 +68,7 @@ public class ElephantRunner implements Runnable {
   private AnalyticJobGenerator _analyticJobGenerator;
 
   private void loadGeneralConfiguration() {
-    Configuration configuration = ElephantContext.instance().getGeneralConf();
+    Configuration configuration = ElephantContext.instance("test-realm").getGeneralConf();
 
     _executorNum = Utils.getNonNegativeInt(configuration, EXECUTOR_NUM_KEY, EXECUTOR_NUM);
     _fetchInterval = Utils.getNonNegativeLong(configuration, FETCH_INTERVAL_KEY, FETCH_INTERVAL);
@@ -77,13 +77,13 @@ public class ElephantRunner implements Runnable {
 
   private void loadAnalyticJobGenerator() {
     if (HadoopSystemContext.isHadoop2Env()) {
-      _analyticJobGenerator = new AnalyticJobGeneratorHadoop2();
+      _analyticJobGenerator = new AnalyticJobGeneratorHadoop2(ElephantContext.instance("test-realm"));
     } else {
       throw new RuntimeException("Unsupported Hadoop major version detected. It is not 2.x.");
     }
 
     try {
-      _analyticJobGenerator.configure(ElephantContext.instance().getGeneralConf());
+      _analyticJobGenerator.configure(ElephantContext.instance("test-realm").getGeneralConf());
     } catch (Exception e) {
       logger.error("Error occurred when configuring the analysis provider.", e);
       throw new RuntimeException(e);
@@ -99,9 +99,9 @@ public class ElephantRunner implements Runnable {
         @Override
         public Void run() {
           HDFSContext.load();
+          ElephantContext.init();
           loadGeneralConfiguration();
           loadAnalyticJobGenerator();
-          ElephantContext.init();
 
           // Initialize the metrics registries.
           MetricsController.init();

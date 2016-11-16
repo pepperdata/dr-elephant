@@ -14,7 +14,7 @@
 * the License.
 *@
 
-@(flowDefPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.Map[IdUrlPair, java.util.List[models.AppResult]]],
+@(realm: com.linkedin.drelephant.RealmContext, flowDefPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.Map[IdUrlPair, java.util.List[models.AppResult]]],
     idPairToJobNameMap: java.util.Map[IdUrlPair, String], flowExecTimeList: java.util.List[Long])
 
 @import com.linkedin.drelephant.analysis.Severity
@@ -82,7 +82,7 @@
                 <td>
                 @if(jobMap.get(jobDefPair) != null) {
                   @for((result,jobCount) <- jobMap.get(jobDefPair).zipWithIndex) {
-                    <a class="hasTooltip" href='@routes.Application.search()?id=@result.id'
+                    <a class="hasTooltip" href='@routes.Application.search(realm)?id=@result.id'
                     style='color: @getSeverityColor(result.severity);'>&#9673;
                       <!-- Table Tooltip Content -->
                       <div id="tooltip-div">

@@ -61,7 +61,7 @@ import play.api.templates.Html;
  */
 public class ElephantContext {
   private static final Logger logger = Logger.getLogger(ElephantContext.class);
-  private static ElephantContext INSTANCE;
+  private static Map<String,ElephantContext> INSTANCE_MAP = new HashMap<String,ElephantContext>();
 
   private static final String AGGREGATORS_CONF = "AggregatorConf.xml";
   private static final String FETCHERS_CONF = "FetcherConf.xml";
@@ -83,18 +83,19 @@ public class ElephantContext {
   private Map<ApplicationType, List<JobType>> _appTypeToJobTypes = new HashMap<ApplicationType, List<JobType>>();
 
   public static void init() {
-    INSTANCE = new ElephantContext();
+    add("test-realm", new ElephantContext());
   }
 
-  public static ElephantContext instance() {
-    if (INSTANCE == null) {
-      INSTANCE = new ElephantContext();
-    }
-    return INSTANCE;
+  public static void add(String name, ElephantContext context) {
+    INSTANCE_MAP.put(name, context);
+  }
+
+  public static ElephantContext instance(String name) {
+    return INSTANCE_MAP.get(name);
   }
 
   // private on purpose
-  private ElephantContext() {
+  protected ElephantContext() {
     loadConfiguration();
   }
 

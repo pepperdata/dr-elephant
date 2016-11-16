@@ -17,7 +17,7 @@
 * the License.
 *@
 
-@(flowDefPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.Map[IdUrlPair, java.util.List[models.AppResult]]],
+@(realm: com.linkedin.drelephant.RealmContext, flowDefPair: IdUrlPair, results: java.util.Map[IdUrlPair, java.util.Map[IdUrlPair, java.util.List[models.AppResult]]],
     idPairToJobNameMap: java.util.Map[IdUrlPair, String], flowExecTimeList: java.util.List[Long])
 
 @import com.linkedin.drelephant.analysis.Severity

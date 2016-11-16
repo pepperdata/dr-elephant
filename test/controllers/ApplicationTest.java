@@ -19,6 +19,7 @@ package controllers;
 import com.avaje.ebean.Query;
 import models.AppResult;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import play.api.mvc.Content;
@@ -34,11 +35,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import mockit.Mocked;
+import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.RealmContext;
+
 public class ApplicationTest {
+
+  @Mocked(stubOutClassInitialization = true)
+  ElephantContext elephantContext = null;
 
   @Test
   public void testRenderHomePage() {
-    Content html = homePage.render(5, 2, 3, searchResults.render("Latest analysis", null));
+    RealmContext realm = new RealmContext().bind("realm", "test-realm");
+    Content html = homePage.render(realm, 5, 2, 3, searchResults.render(realm, "Latest analysis", null));
     assertEquals("text/html", html.contentType());
     assertTrue(html.body().contains("Hello there, I've been busy!"));
     assertTrue(html.body().contains("I looked through <b>5</b> jobs today."));
@@ -48,7 +57,8 @@ public class ApplicationTest {
 
   @Test
   public void testRenderSearch() {
-    Content html = searchResults.render("Latest analysis", null);
+    RealmContext realm = new RealmContext().bind("realm", "test-realm");
+    Content html = searchResults.render(realm, "Latest analysis", null);
     assertEquals("text/html", html.contentType());
     assertTrue(html.body().contains("Latest analysis"));
   }
@@ -64,6 +74,11 @@ public class ApplicationTest {
   @AfterClass
   public static void stopApp() {
     Helpers.stop(app);
+  }
+
+  @Before
+  public void setup() {
+    ElephantContext.add("test-realm", elephantContext);
   }
 
   @Test

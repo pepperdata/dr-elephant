@@ -13,9 +13,9 @@
 * License for the specific language governing permissions and limitations under
 * the License.
 *@
-@(flowDefId: String, graphType: String, results: Html)
+@(realm: com.linkedin.drelephant.RealmContext, flowDefId: String, graphType: String, results: Html)
 
-@newmain("Dr. Elephant - Flow History", "flowhistory") {
+@newmain(realm, "Dr. Elephant - Flow History", "flowhistory") {
 
   <!-- The Search panel-->
   <div class="box shadow details-container history-top">
@@ -23,7 +23,7 @@
     <h4>Flow History</h4>
     <hr class="horizontal-line">
     <br/>
-    <form class="box" id="flow-history-form" role="form" method="get" action="@routes.Application.flowHistory()">
+    <form class="box" id="flow-history-form" role="form" method="get" action="@routes.Application.flowHistory(realm)">
       <div class="form-group">
         <label for="form-flow-def-idurl" >Flow Definition URL/ID</label>
         <input type="text" class="form-control" id="form-flow-def-id" name="flow-def-id" placeholder="Flow Definition URL/ID" value=@flowDefId>

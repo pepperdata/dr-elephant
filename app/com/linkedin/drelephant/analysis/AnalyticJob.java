@@ -37,6 +37,7 @@ public class AnalyticJob {
   private static final String UNKNOWN_JOB_TYPE = "Unknown";   // The default job type when the data matches nothing.
   private static final int _RETRY_LIMIT = 3;                  // Number of times a job needs to be tried before dropping
 
+  private final ElephantContext context;
   private int _retries = 0;
   private ApplicationType _type;
   private String _appId;
@@ -46,6 +47,10 @@ public class AnalyticJob {
   private String _trackingUrl;
   private long _startTime;
   private long _finishTime;
+
+  public AnalyticJob(ElephantContext context) {
+    this.context = context;
+  }
 
   /**
    * Returns the application type
@@ -227,7 +232,7 @@ public class AnalyticJob {
    * @return the analysed AppResult
    */
   public AppResult getAnalysis() throws Exception {
-    ElephantFetcher fetcher = ElephantContext.instance().getFetcherForApplicationType(getAppType());
+    ElephantFetcher fetcher = context.getFetcherForApplicationType(getAppType());
     HadoopApplicationData data = fetcher.fetchData(this);
 
     // Run all heuristics over the fetched data
@@ -237,7 +242,7 @@ public class AnalyticJob {
       logger.info("No Data Received for analytic job: " + getAppId());
       analysisResults.add(HeuristicResult.NO_DATA);
     } else {
-      List<Heuristic> heuristics = ElephantContext.instance().getHeuristicsForApplicationType(getAppType());
+      List<Heuristic> heuristics = context.getHeuristicsForApplicationType(getAppType());
       for (Heuristic heuristic : heuristics) {
         HeuristicResult result = heuristic.apply(data);
         if (result != null) {
@@ -246,10 +251,10 @@ public class AnalyticJob {
       }
     }
 
-    JobType jobType = ElephantContext.instance().matchJobType(data);
+    JobType jobType = context.matchJobType(data);
     String jobTypeName = jobType == null ? UNKNOWN_JOB_TYPE : jobType.getName();
 
-    HadoopMetricsAggregator hadoopMetricsAggregator = ElephantContext.instance().getAggregatorForApplicationType(getAppType());
+    HadoopMetricsAggregator hadoopMetricsAggregator = context.getAggregatorForApplicationType(getAppType());
     hadoopMetricsAggregator.aggregate(data);
     HadoopAggregatedData hadoopAggregatedData = hadoopMetricsAggregator.getResult();
 

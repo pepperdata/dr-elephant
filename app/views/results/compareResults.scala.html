@@ -14,7 +14,7 @@
 * the License.
 *@
 
-@(results: java.util.Map[IdUrlPair, java.util.Map[IdUrlPair, java.util.List[models.AppResult]]])
+@(realm: com.linkedin.drelephant.RealmContext, results: java.util.Map[IdUrlPair, java.util.Map[IdUrlPair, java.util.List[models.AppResult]]])
 
 @*
 * The layout of the comparison results.
@@ -36,7 +36,7 @@
               @if(jobs != null) {
                 @for(result <- jobs) {
                   <a class="list-group-item list-group-item-@result.severity.getBootstrapColor"
-                  href="@routes.Application.search()?id=@result.id">
+                  href="@routes.Application.search(realm)?id=@result.id">
                   @tags.jobSummary(result)
                   </a>
                 }

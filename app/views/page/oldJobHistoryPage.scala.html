@@ -14,14 +14,14 @@
 * the License.
 *@
 
-@(jobDefId: String, graphType: String, results: Html)
+@(realm: com.linkedin.drelephant.RealmContext, jobDefId: String, graphType: String, results: Html)
 
-@main("Dr. Elephant - Job History", "jobhistory") {
+@main(realm, "Dr. Elephant - Job History", "jobhistory") {
 
   <!-- The Search panel-->
   @tags.column(12) {
     @tags.panel(){ Job History } {
-      <form id="job-history-form" role="form" method="get" action="@routes.Application.oldJobHistory()">
+      <form id="job-history-form" role="form" method="get" action="@routes.Application.oldJobHistory(realm)">
         <div class="form-group">
           <label for="form-job-def-id">Job Definition URL/ID</label>
           <input type="text" class="form-control" id="form-job-def-id" name="job-def-id" placeholder="Job Def URL/ID" value=@jobDefId>

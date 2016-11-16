@@ -1,7 +1,7 @@
-@(title: String)(content: Html)
+@(realm: com.linkedin.drelephant.RealmContext, title: String)(content: Html)
   @import com.linkedin.drelephant.analysis.Metrics;
 
-  @newmain("Dr Elephant", "help") {
+  @newmain(realm, "Dr Elephant", "help") {
 
     <div class="history-top">
       <table width="100%">
@@ -11,20 +11,20 @@
               <h4>Topics</h4>
               <hr class="horizontal-line">
               <div class="list-group-item-heading">METRICS</div>
-              <a href="@routes.Application.help()?topic=@Metrics.USED_RESOURCES.getText()">Used Resources</a><br>
-              <a href="@routes.Application.help()?topic=@Metrics.WASTED_RESOURCES.getText()">Wasted Resources</a><br>
-              <a href="@routes.Application.help()?topic=@Metrics.RUNTIME.getText()">Run Time</a><br>
-              <a href="@routes.Application.help()?topic=@Metrics.WAIT_TIME.getText()">Wait Time</a><br>
+              <a href="@routes.Application.help(realm)?topic=@Metrics.USED_RESOURCES.getText()">Used Resources</a><br>
+              <a href="@routes.Application.help(realm)?topic=@Metrics.WASTED_RESOURCES.getText()">Wasted Resources</a><br>
+              <a href="@routes.Application.help(realm)?topic=@Metrics.RUNTIME.getText()">Run Time</a><br>
+              <a href="@routes.Application.help(realm)?topic=@Metrics.WAIT_TIME.getText()">Wait Time</a><br>
             </br>
-              @for((appTypeName, heuristicList) <- com.linkedin.drelephant.ElephantContext.instance().getAllHeuristicNames()) {
+              @for((appTypeName, heuristicList) <- realm.context.getAllHeuristicNames()) {
                 <div class="list-group-item-heading">@appTypeName</div>
                 @for(heuristic <- heuristicList) {
-                  <a href="@routes.Application.help()?topic=@helper.urlEncode(heuristic)">@heuristic</a> <br>
+                  <a href="@routes.Application.help(realm)?topic=@helper.urlEncode(heuristic)">@heuristic</a> <br>
                   }
               </br>
               }
 
-              <a href="@routes.Application.help()?topic=@helper.urlEncode(com.linkedin.drelephant.analysis.HeuristicResult.NO_DATA.getHeuristicName)">@com.linkedin.drelephant.analysis.HeuristicResult.NO_DATA.getHeuristicName</a><br>
+              <a href="@routes.Application.help(realm)?topic=@helper.urlEncode(com.linkedin.drelephant.analysis.HeuristicResult.NO_DATA.getHeuristicName)">@com.linkedin.drelephant.analysis.HeuristicResult.NO_DATA.getHeuristicName</a><br>
             </div>
           </td>
           <td style="width:77%" valign="top">

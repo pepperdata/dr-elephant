@@ -13,9 +13,9 @@
 * License for the specific language governing permissions and limitations under
 * the License.
 *@
-@(jobDefId: String, graphType: String, results: Html)
+@(realm: com.linkedin.drelephant.RealmContext, jobDefId: String, graphType: String, results: Html)
 
-@newmain("Dr. Elephant - Job History", "jobhistory") {
+@newmain(realm, "Dr. Elephant - Job History", "jobhistory") {
 
   <div class="box shadow details-container history-top">
 
@@ -23,7 +23,7 @@
     <hr class="horizontal-line">
     <br/>
       <!-- The Search panel-->
-    <form id="job-history-form" role="form" method="get" action="@routes.Application.jobHistory()">
+    <form id="job-history-form" role="form" method="get" action="@routes.Application.jobHistory(realm)">
       <div class="form-group">
         <label for="form-job-def-id">Job Definition URL/ID</label>
         <input type="text" class="form-control" id="form-job-def-id" name="job-def-id" placeholder="Job Def URL/ID" value=@jobDefId>
