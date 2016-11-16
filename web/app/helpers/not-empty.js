@@ -23,7 +23,7 @@ import Ember from 'ember';
  */
 export function notEmpty(params) {
   let [id] = params;
-  if(id==="") {
+  if(id=="" || id==null) {
     return false;
   }
   return true;
