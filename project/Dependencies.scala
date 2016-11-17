@@ -14,7 +14,7 @@
 // the License.
 //
 
-import play.Project._
+import play.sbt.PlayImport._
 import sbt._
 
 object Dependencies {
@@ -23,8 +23,8 @@ object Dependencies {
   lazy val commonsCodecVersion = "1.10"
   lazy val commonsIoVersion = "2.4"
   lazy val gsonVersion = "2.2.4"
-  lazy val guavaVersion = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
-  lazy val jacksonMapperAslVersion = "1.7.3"
+  lazy val guavaVersion = "19.0" // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
+  lazy val jacksonMapperAslVersion = "1.9.13"
   lazy val jsoupVersion = "1.7.3"
   lazy val mysqlConnectorVersion = "5.1.36"
 
@@ -42,14 +42,14 @@ object Dependencies {
   }
 
   val sparkExclusion = if (sparkVersion >= "1.5.0") {
-    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
+    "org.apache.spark" % "spark-core_2.11" % sparkVersion excludeAll(
       ExclusionRule(organization = "com.typesafe.akka"),
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
     )
   } else {
-    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
+    "org.apache.spark" % "spark-core_2.11" % sparkVersion excludeAll(
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
@@ -58,6 +58,7 @@ object Dependencies {
 
   // Dependency coordinates
   var requiredDep = Seq(
+    "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.7.6",
     "com.google.code.gson" % "gson" % gsonVersion,
     "com.google.guava" % "guava" % guavaVersion,
     "commons-codec" % "commons-codec" % commonsCodecVersion,
@@ -77,6 +78,10 @@ object Dependencies {
     "org.jmockit" % "jmockit" % "1.23" % Test
   ) :+ sparkExclusion 
 
-  var dependencies = Seq(javaJdbc, javaEbean, cache)
+  var dependencies = Seq(
+    cache,
+    javaJdbc,
+    javaWs
+  )
   dependencies ++= requiredDep
 }

@@ -14,16 +14,23 @@
 // the License.
 //
 
-import play.Project._
 import Dependencies._
+
+scalaVersion := "2.11.7"
 
 name := "dr-elephant"
 
 version := "2.0.6"
 
+lazy val root = (project in file(".")).enablePlugins(PlayJava, PlayEbean, SbtTwirl)
+
 organization := "com.linkedin.drelephant"
 
+retrieveManaged := true
+
 javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6")
+
+javaOptions in Test += "-javaagent:lib_managed/jars/org.jmockit/jmockit/jmockit-1.23.jar"
 
 libraryDependencies ++= dependencies
 
@@ -33,4 +40,4 @@ ivyConfigurations += config("compileonly").hide
 // Append all dependencies with 'compileonly' configuration to unmanagedClasspath in Compile.
 unmanagedClasspath in Compile ++= update.value.select(configurationFilter("compileonly"))
 
-playJavaSettings
+routesGenerator := StaticRoutesGenerator

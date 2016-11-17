@@ -19,7 +19,7 @@
 # ~~~~
 
 # Application calls
-GET        /:realm/                              controllers.Application.dashboard(realm: com.linkedin.drelephant.RealmContext)
+GET        /:realm/                             controllers.Application.dashboard(realm: com.linkedin.drelephant.RealmContext)
 GET        /:realm/help                         controllers.Application.oldHelp(realm: com.linkedin.drelephant.RealmContext)
 GET        /:realm/search                       controllers.Application.search(realm: com.linkedin.drelephant.RealmContext)
 GET        /:realm/compare                      controllers.Application.compare(realm: com.linkedin.drelephant.RealmContext)
