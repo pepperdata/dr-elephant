@@ -143,12 +143,12 @@ public class Application extends Controller {
 
     // Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {
-      _numJobsAnalyzed = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
-      _numJobsCritical = AppResult.find.where()
+      _numJobsAnalyzed = AppResult.find(realm.name()).where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
+      _numJobsCritical = AppResult.find(realm.name()).where()
           .gt(AppResult.TABLE.FINISH_TIME, finishDate)
           .eq(AppResult.TABLE.SEVERITY, Severity.CRITICAL.getValue())
           .findRowCount();
-      _numJobsSevere = AppResult.find.where()
+      _numJobsSevere = AppResult.find(realm.name()).where()
           .gt(AppResult.TABLE.FINISH_TIME, finishDate)
           .eq(AppResult.TABLE.SEVERITY, Severity.SEVERE.getValue())
           .findRowCount();
@@ -156,7 +156,7 @@ public class Application extends Controller {
     }
 
     // Fetch only required fields for jobs analysed in the last 24 hours up to a max of 50 jobs
-    List<AppResult> results = AppResult.find.select(AppResult.getSearchFields())
+    List<AppResult> results = AppResult.find(realm.name()).select(AppResult.getSearchFields())
         .where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .order()
@@ -177,7 +177,7 @@ public class Application extends Controller {
    * can probably be derived from the ID in most cases, we would need scheduler specific logic which
    * would be a mess.
    */
-  private static IdUrlPair bestSchedulerInfoMatchLikeValue(String value, String schedulerIdField) {
+  private static IdUrlPair bestSchedulerInfoMatchLikeValue(RealmContext realm, String value, String schedulerIdField) {
     String schedulerUrlField;
     if (schedulerIdField.equals(AppResult.TABLE.FLOW_DEF_ID)) {
       schedulerUrlField = AppResult.TABLE.FLOW_DEF_URL;
@@ -190,7 +190,7 @@ public class Application extends Controller {
     } else {
       throw new RuntimeException(String.format("%s is not a valid scheduler info id field", schedulerIdField));
     }
-    AppResult result = AppResult.find
+    AppResult result = AppResult.find(realm.name())
             .select(String.format("%s, %s", schedulerIdField, schedulerUrlField))
             .where().like(schedulerIdField, value)
             .order()
@@ -217,10 +217,10 @@ public class Application extends Controller {
   private static IdUrlPair bestSchedulerInfoMatchGivenPartialId(RealmContext realm, String partialSchedulerInfoId, String schedulerInfoIdField) {
     IdUrlPair schedulerInfoPair;
     // check for exact match
-    schedulerInfoPair = bestSchedulerInfoMatchLikeValue(partialSchedulerInfoId, schedulerInfoIdField);
+    schedulerInfoPair = bestSchedulerInfoMatchLikeValue(realm, partialSchedulerInfoId, schedulerInfoIdField);
     // check for suffix match if feature isn't disabled
     if (schedulerInfoPair == null && realm.context().getGeneralConf().getBoolean(SEARCH_MATCHES_PARTIAL_CONF, true)) {
-      schedulerInfoPair = bestSchedulerInfoMatchLikeValue(String.format("%s%%", partialSchedulerInfoId), schedulerInfoIdField);
+      schedulerInfoPair = bestSchedulerInfoMatchLikeValue(realm, String.format("%s%%", partialSchedulerInfoId), schedulerInfoIdField);
     }
     // if we didn't find anything just give a buest guess
     if (schedulerInfoPair == null) {
@@ -244,7 +244,7 @@ public class Application extends Controller {
 
     // Search and display job details when job id or flow execution url is provided.
     if (!appId.isEmpty()) {
-      AppResult result = AppResult.find.select("*")
+      AppResult result = AppResult.find(realm.name()).select("*")
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS,
               "*")
@@ -253,7 +253,7 @@ public class Application extends Controller {
       return ok(searchPage.render(realm, null, jobDetails.render(realm, result)));
     } else if (Utils.isSet(partialFlowExecId)) {
       IdUrlPair flowExecPair = bestSchedulerInfoMatchGivenPartialId(realm, partialFlowExecId, AppResult.TABLE.FLOW_EXEC_ID);
-      List<AppResult> results = AppResult.find
+      List<AppResult> results = AppResult.find(realm.name())
           .select(AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_EXEC_ID)
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
           .where()
@@ -280,7 +280,7 @@ public class Application extends Controller {
     int paginationBarStartIndex = paginationStats.getPaginationBarStartIndex();
 
     // Filter jobs by search parameters
-    Query<AppResult> query = generateSearchQuery(AppResult.getSearchFields(), getSearchParams());
+    Query<AppResult> query = generateSearchQuery(realm, AppResult.getSearchFields(), getSearchParams());
     List<AppResult> results = query.setFirstRow((paginationBarStartIndex - 1) * pageLength)
         .setMaxRows((paginationStats.getPageBarLength() - 1) * pageLength + 1)
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
@@ -346,11 +346,11 @@ public class Application extends Controller {
    * @param searchParams The fields to query on the table
    * @return An sql expression on App Result
    */
-  public static Query<AppResult> generateSearchQuery(String selectParams, Map<String, String> searchParams) {
+  public static Query<AppResult> generateSearchQuery(RealmContext realm, String selectParams, Map<String, String> searchParams) {
     if (searchParams == null || searchParams.isEmpty()) {
-      return AppResult.find.select(selectParams).order().desc(AppResult.TABLE.FINISH_TIME);
+      return AppResult.find(realm.name()).select(selectParams).order().desc(AppResult.TABLE.FINISH_TIME);
     }
-    ExpressionList<AppResult> query = AppResult.find.select(selectParams).where();
+    ExpressionList<AppResult> query = AppResult.find(realm.name()).select(selectParams).where();
 
     // Build predicates
     String username = searchParams.get(USERNAME);
@@ -432,13 +432,13 @@ public class Application extends Controller {
     if (partialFlowExecId1 != null && !partialFlowExecId1.isEmpty() && partialFlowExecId2 != null && !partialFlowExecId2.isEmpty()) {
       IdUrlPair flowExecIdPair1 = bestSchedulerInfoMatchGivenPartialId(realm, partialFlowExecId1, AppResult.TABLE.FLOW_EXEC_ID);
       IdUrlPair flowExecIdPair2 = bestSchedulerInfoMatchGivenPartialId(realm, partialFlowExecId2, AppResult.TABLE.FLOW_EXEC_ID);
-      results1 = AppResult.find
+      results1 = AppResult.find(realm.name())
           .select(AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_DEF_ID + "," + AppResult.TABLE.JOB_DEF_URL
               + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL)
           .where().eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecIdPair1.getId()).setMaxRows(100)
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields())
           .findList();
-      results2 = AppResult.find
+      results2 = AppResult.find(realm.name())
           .select(
               AppResult.getSearchFields() + "," + AppResult.TABLE.JOB_DEF_ID + "," + AppResult.TABLE.JOB_DEF_URL + ","
                   + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL)
@@ -548,7 +548,7 @@ public class Application extends Controller {
     if (graphType.equals("time") || graphType.equals("resources")) {
 
       // if graph type is time or resources, we don't need the result from APP_HEURISTIC_RESULTS
-      results = AppResult.find.select(
+      results = AppResult.find(realm.name()).select(
           AppResult.getSearchFields() + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL + ","
               + AppResult.TABLE.JOB_DEF_ID + "," + AppResult.TABLE.JOB_DEF_URL + "," + AppResult.TABLE.JOB_NAME)
           .where()
@@ -560,7 +560,7 @@ public class Application extends Controller {
     } else {
 
       // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
-      results = AppResult.find.select(
+      results = AppResult.find(realm.name()).select(
           AppResult.getSearchFields() + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL + ","
               + AppResult.TABLE.JOB_DEF_ID + "," + AppResult.TABLE.JOB_DEF_URL + "," + AppResult.TABLE.JOB_NAME)
           .where()
@@ -684,7 +684,7 @@ public class Application extends Controller {
 
     if (graphType.equals("time") || graphType.equals("resources")) {
       // we don't need APP_HEURISTIC_RESULT_DETAILS data to plot for time and resources
-      results = AppResult.find.select(
+      results = AppResult.find(realm.name()).select(
           AppResult.getSearchFields() + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL)
           .where()
           .eq(AppResult.TABLE.JOB_DEF_ID, jobDefPair.getId())
@@ -694,7 +694,7 @@ public class Application extends Controller {
           .findList();
     } else {
       // Fetch all job executions
-      results = AppResult.find.select(
+      results = AppResult.find(realm.name()).select(
           AppResult.getSearchFields() + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL)
           .where()
           .eq(AppResult.TABLE.JOB_DEF_ID, jobDefPair.getId())
@@ -850,7 +850,7 @@ public class Application extends Controller {
       id = id.replaceAll("job", "application");
     }
 
-    AppResult result = AppResult.find.select("*")
+    AppResult result = AppResult.find(realm.name()).select("*")
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
         .where()
@@ -874,7 +874,7 @@ public class Application extends Controller {
       return badRequest("No job exec url provided.");
     }
 
-    List<AppResult> result = AppResult.find.select("*")
+    List<AppResult> result = AppResult.find(realm.name()).select("*")
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
         .where()
@@ -898,7 +898,7 @@ public class Application extends Controller {
       return badRequest("No flow exec url provided.");
     }
 
-    List<AppResult> results = AppResult.find.select("*")
+    List<AppResult> results = AppResult.find(realm.name()).select("*")
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
         .where()
@@ -940,7 +940,7 @@ public class Application extends Controller {
     String flowExecId = form.get(FLOW_EXEC_ID);
     flowExecId = (flowExecId != null) ? flowExecId.trim() : null;
     if (!appId.isEmpty()) {
-      AppResult result = AppResult.find.select("*")
+      AppResult result = AppResult.find(realm.name()).select("*")
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS,
               "*")
@@ -953,7 +953,7 @@ public class Application extends Controller {
         return notFound("Unable to find record on id: " + appId);
       }
     } else if (flowExecId != null && !flowExecId.isEmpty()) {
-      List<AppResult> results = AppResult.find.select("*")
+      List<AppResult> results = AppResult.find(realm.name()).select("*")
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS,
               "*")
@@ -975,7 +975,7 @@ public class Application extends Controller {
       }
     }
 
-    Query<AppResult> query = generateSearchQuery("*", getSearchParams());
+    Query<AppResult> query = generateSearchQuery(realm, "*", getSearchParams());
     List<AppResult> results = query.setFirstRow((page - 1) * REST_PAGE_LENGTH)
         .setMaxRows(REST_PAGE_LENGTH)
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
@@ -1003,7 +1003,7 @@ public class Application extends Controller {
     List<AppResult> results1 = null;
     List<AppResult> results2 = null;
     if (flowExecId1 != null && !flowExecId1.isEmpty() && flowExecId2 != null && !flowExecId2.isEmpty()) {
-      results1 = AppResult.find.select("*")
+      results1 = AppResult.find(realm.name()).select("*")
           .where()
           .eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecId1)
           .setMaxRows(100)
@@ -1011,7 +1011,7 @@ public class Application extends Controller {
           .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS,
               "*")
           .findList();
-      results2 = AppResult.find.select("*")
+      results2 = AppResult.find(realm.name()).select("*")
           .where()
           .eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecId2)
           .setMaxRows(100)
@@ -1088,7 +1088,7 @@ public class Application extends Controller {
     }
 
     // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
-    List<AppResult> results = getRestFlowAppResults(flowDefId);
+    List<AppResult> results = getRestFlowAppResults(realm, flowDefId);
 
     if (results.size() == 0) {
       logger.info("No results for Job url");
@@ -1182,7 +1182,7 @@ public class Application extends Controller {
     }
 
     // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
-    List<AppResult> results = getRestJobAppResults(jobDefId);
+    List<AppResult> results = getRestJobAppResults(realm, jobDefId);
 
     if (results.size() == 0) {
       logger.info("No results for Job url");
@@ -1273,7 +1273,7 @@ public class Application extends Controller {
       return ok(new Gson().toJson(datasets));
     }
 
-    List<AppResult> results = getRestJobAppResults(jobDefId);
+    List<AppResult> results = getRestJobAppResults(realm, jobDefId);
 
     if (results.size() == 0) {
       logger.info("No results for Job url");
@@ -1356,7 +1356,7 @@ public class Application extends Controller {
       }
       Date start = tf.parse(startTime);
       Date end = tf.parse(endTime);
-      Collection<AppResourceUsageData> result = getUserResourceUsage(start, end);
+      Collection<AppResourceUsageData> result = getUserResourceUsage(realm, start, end);
 
       return ok(new Gson().toJson(result));
     }
@@ -1412,7 +1412,7 @@ public class Application extends Controller {
       return ok(new Gson().toJson(datasets));
     }
 
-    List<AppResult> results = getRestFlowAppResults(flowDefId);
+    List<AppResult> results = getRestFlowAppResults(realm, flowDefId);
 
     if (results.size() == 0) {
       logger.info("No results for Job url");
@@ -1485,8 +1485,8 @@ public class Application extends Controller {
    * Returns a list of AppResults after quering the FLOW_EXEC_ID from the database
    * @return The list of AppResults
    */
-  private static List<AppResult> getRestJobAppResults(String jobDefId) {
-    List<AppResult> results = AppResult.find.select(
+  private static List<AppResult> getRestJobAppResults(RealmContext realm, String jobDefId) {
+    List<AppResult> results = AppResult.find(realm.name()).select(
         AppResult.getSearchFields() + "," + AppResult.TABLE.FLOW_EXEC_ID + "," + AppResult.TABLE.FLOW_EXEC_URL)
         .where()
         .eq(AppResult.TABLE.JOB_DEF_ID, jobDefId)
@@ -1503,9 +1503,9 @@ public class Application extends Controller {
    * Returns the list of AppResults after quering the FLOW_DEF_ID from the database
    * @return The list of AppResults
    */
-  private static List<AppResult> getRestFlowAppResults(String flowDefId) {
+  private static List<AppResult> getRestFlowAppResults(RealmContext realm, String flowDefId) {
     // Fetch available flow executions with latest JOB_HISTORY_LIMIT mr jobs.
-    List<AppResult> results = AppResult.find.select("*")
+    List<AppResult> results = AppResult.find(realm.name()).select("*")
         .where()
         .eq(AppResult.TABLE.FLOW_DEF_ID, flowDefId)
         .order()
@@ -1526,11 +1526,11 @@ public class Application extends Controller {
    * Returns the list of users with their resourceUsed and resourceWasted Data for the given time range
    * @return list of AppResourceUsageData
    **/
-  private static Collection<AppResourceUsageData> getUserResourceUsage(Date start, Date end) {
+  private static Collection<AppResourceUsageData> getUserResourceUsage(RealmContext realm, Date start, Date end) {
     long resourceUsed = 0;
     Map<String, AppResourceUsageData> userResourceUsage = new HashMap<String, AppResourceUsageData>();
     // Fetch all the appresults for the given time range [startTime, endTime).
-    List<AppResult> results = AppResult.find.select("*")
+    List<AppResult> results = AppResult.find(realm.name()).select("*")
         .where()
         .ge(AppResult.TABLE.START_TIME, start.getTime())
         .lt(AppResult.TABLE.START_TIME, end.getTime()).findList();

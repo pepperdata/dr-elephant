@@ -28,6 +28,7 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.Model;
 
 
@@ -61,4 +62,41 @@ public class AppHeuristicResultDetails extends Model {
 
   @Column(nullable = true)
   public String details;
+
+  @Override
+  public boolean delete() {
+    throw new IllegalArgumentException("must use delete(String server)");
+  }
+
+  /**
+  @Override
+  public boolean deletePermanent() {
+    throw new IllegalArgumentException("deletePermanent not supported");
+  }
+  */
+
+  @Override
+  public void insert() {
+    throw new IllegalArgumentException("must use insert(String server)");
+  }
+
+  @Override
+  public void markAsDirty() {
+    throw new IllegalArgumentException("markAsDirty not supported");
+  }
+
+  @Override
+  public void refresh() {
+    throw new IllegalArgumentException("refresh not supported");
+  }
+
+  @Override
+  public void save() {
+    throw new IllegalArgumentException("save not supported");
+  }
+
+  @Override
+  public void update() {
+    throw new IllegalArgumentException("must use update(String server)");
+  }
 }

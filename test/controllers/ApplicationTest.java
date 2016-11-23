@@ -18,18 +18,20 @@ package controllers;
 
 import com.avaje.ebean.Query;
 import models.AppResult;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import play.twirl.api.Content;
+import play.GlobalSettings;
 import play.test.Helpers;
 import views.html.page.homePage;
 import views.html.results.searchResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static common.TestConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -37,122 +39,139 @@ import static org.junit.Assert.assertTrue;
 import mockit.Mocked;
 import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.RealmContext;
+import com.linkedin.drelephant.RealmEbeanContext;
 
 public class ApplicationTest {
+
+  private static final Logger logger = LoggerFactory.getLogger(ApplicationTest.class);
 
   @Mocked(stubOutClassInitialization = true)
   ElephantContext elephantContext = null;
 
   @Test
   public void testRenderHomePage() {
-    RealmContext realm = new RealmContext().bind("realm", "test-realm");
-    Content html = homePage.render(realm, 5, 2, 3, searchResults.render(realm, "Latest analysis", null));
-    assertEquals("text/html", html.contentType());
-    assertTrue(html.body().contains("Hello there, I've been busy!"));
-    assertTrue(html.body().contains("I looked through <b>5</b> jobs today."));
-    assertTrue(html.body().contains("About <b>2</b> of them could use some tuning."));
-    assertTrue(html.body().contains("About <b>3</b> of them need some serious attention!"));
+    Helpers.running(Helpers.testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        RealmContext realm = new RealmContext().bind("realm", "test-realm");
+        Content html = homePage.render(realm, 5, 2, 3, searchResults.render(realm, "Latest analysis", null));
+        assertEquals("text/html", html.contentType());
+        assertTrue(html.body().contains("Hello there, I've been busy!"));
+        assertTrue(html.body().contains("I looked through <b>5</b> jobs today."));
+        assertTrue(html.body().contains("About <b>2</b> of them could use some tuning."));
+        assertTrue(html.body().contains("About <b>3</b> of them need some serious attention!"));
+      }
+    });
   }
 
   @Test
   public void testRenderSearch() {
-    RealmContext realm = new RealmContext().bind("realm", "test-realm");
-    Content html = searchResults.render(realm, "Latest analysis", null);
-    assertEquals("text/html", html.contentType());
-    assertTrue(html.body().contains("Latest analysis"));
+    Helpers.running(Helpers.testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        RealmContext realm = new RealmContext().bind("realm", "test-realm");
+        Content html = searchResults.render(realm, "Latest analysis", null);
+        assertEquals("text/html", html.contentType());
+        assertTrue(html.body().contains("Latest analysis"));
+      }
+    });
   }
 
-  public static play.Application app;
-
-  @BeforeClass
-  public static void startApp() {
-    app = Helpers.fakeApplication(Helpers.inMemoryDatabase());
-    Helpers.start(app);
-  }
-
-  @AfterClass
-  public static void stopApp() {
-    Helpers.stop(app);
-  }
+  public static play.Application fakeApp;
 
   @Before
-  public void setup() {
-    ElephantContext.add("test-realm", elephantContext);
+  public void startApp() {
+    Map<String, String> dbConn = new HashMap<String, String>();
+    dbConn.put(DB_DEFAULT_DRIVER_KEY, DB_DEFAULT_DRIVER_VALUE);
+    dbConn.put(DB_DEFAULT_URL_KEY, DB_DEFAULT_URL_VALUE);
+    dbConn.put(EVOLUTION_PLUGIN_KEY, EVOLUTION_PLUGIN_VALUE);
+    dbConn.put(APPLY_EVOLUTIONS_DEFAULT_KEY, APPLY_EVOLUTIONS_DEFAULT_VALUE);
+
+    GlobalSettings gs = new GlobalSettings() {
+      @Override
+      public void onStart(play.Application app) {
+        logger.info("Starting FakeApplication");
+      }
+    };
+
+    fakeApp = Helpers.fakeApplication(dbConn, gs);
+    new RealmEbeanContext("test-realm", fakeApp.configuration());
   }
 
   @Test
   public void testGenerateSearchQuery() {
+    Helpers.running(Helpers.testServer(TEST_SERVER_PORT, fakeApp), new Runnable() {
+      public void run() {
+        RealmContext realm = new RealmContext().bind("realm", "test-realm");
+        Map<String, String> searchParams = new HashMap<String, String>();
 
-    Map<String, String> searchParams = new HashMap<String, String>();
+        // Null searchParams Check
+        Query<AppResult> query1 = Application.generateSearchQuery(realm, "*", null);
+        assertNotNull(query1.findList());
+        String sql1 = query1.getGeneratedSql();
+        assertTrue(sql1.contains("select t0.id c0"));
+        assertTrue(sql1.contains("from test_realm__yarn_app_result t0 order by t0.finish_time desc"));
 
-    // Null searchParams Check
-    Query<AppResult> query1 = Application.generateSearchQuery("*", null);
-    assertNotNull(query1.findList());
-    String sql1 = query1.getGeneratedSql();
-    assertTrue(sql1.contains("select t0.id c0"));
-    assertTrue(sql1.contains("from yarn_app_result t0 order by t0.finish_time desc"));
+        // No searchParams Check
+        Query<AppResult> query2 = Application.generateSearchQuery(realm, "*", searchParams);
+        assertNotNull(query2.findList());
+        String sql2 = query2.getGeneratedSql();
+        assertTrue(sql2.contains("select t0.id c0"));
+        assertTrue(sql2.contains("from test_realm__yarn_app_result t0 order by t0.finish_time desc"));
 
-    // No searchParams Check
-    Query<AppResult> query2 = Application.generateSearchQuery("*", searchParams);
-    assertNotNull(query2.findList());
-    String sql2 = query2.getGeneratedSql();
-    assertTrue(sql2.contains("select t0.id c0"));
-    assertTrue(sql2.contains("from yarn_app_result t0 order by t0.finish_time desc"));
+        // Query by username
+        searchParams.put(Application.USERNAME, "username");
+        query2 = Application.generateSearchQuery(realm, "*", searchParams);
+        assertNotNull(query2.findList());
+        sql2 = query2.getGeneratedSql();
+        assertTrue(sql2.contains("select t0.id c0"));
+        assertTrue(sql2.contains("from test_realm__yarn_app_result t0 where"));
+        assertTrue(sql2.contains("t0.username = ?  order by t0.finish_time desc"));
 
-    // Query by username
-    searchParams.put(Application.USERNAME, "username");
-    query2 = Application.generateSearchQuery("*", searchParams);
-    assertNotNull(query2.findList());
-    sql2 = query2.getGeneratedSql();
-    assertTrue(sql2.contains("select t0.id c0"));
-    assertTrue(sql2.contains("from yarn_app_result t0 where"));
-    assertTrue(sql2.contains("t0.username = ?  order by t0.finish_time desc"));
+        // Query by queuename
+        searchParams.put(Application.QUEUE_NAME, "queueName");
+        query2 = Application.generateSearchQuery(realm, "*", searchParams);
+        assertNotNull(query2.findList());
+        sql2 = query2.getGeneratedSql();
+        assertTrue(sql2.contains("select t0.id c0"));
+        assertTrue(sql2.contains("from test_realm__yarn_app_result t0 where"));
+        assertTrue(sql2.contains("t0.queue_name = ?  order by t0.finish_time desc"));
 
-    // Query by queuename
-    searchParams.put(Application.QUEUE_NAME, "queueName");
-    query2 = Application.generateSearchQuery("*", searchParams);
-    assertNotNull(query2.findList());
-    sql2 = query2.getGeneratedSql();
-    assertTrue(sql2.contains("select t0.id c0"));
-    assertTrue(sql2.contains("from yarn_app_result t0 where"));
-    assertTrue(sql2.contains("t0.queue_name = ?  order by t0.finish_time desc"));
+        // Query by jobtype
+        searchParams.put(Application.JOB_TYPE, "Pig");
+        query2 = Application.generateSearchQuery(realm, "*", searchParams);
+        assertNotNull(query2.findList());
+        sql2 = query2.getGeneratedSql();
+        assertTrue(sql2.contains("select t0.id c0"));
+        assertTrue(sql2.contains("from test_realm__yarn_app_result t0 where"));
+        assertTrue(sql2.contains("t0.username = ?"));
+        assertTrue(sql2.contains("t0.job_type = ?"));
+        assertTrue(sql2.contains("order by t0.finish_time desc"));
 
+        // Query by username, jobtype and start time
+        searchParams.put(Application.STARTED_TIME_BEGIN, "1459713751000");
+        searchParams.put(Application.STARTED_TIME_END, "1459713751000");
+        Query<AppResult> query3 = Application.generateSearchQuery(realm, "*", searchParams);
+        assertNotNull(query3.findList());
+        String sql3 = query3.getGeneratedSql();
+        assertTrue(sql3.contains("select t0.id c0"));
+        assertTrue(sql3.contains("from test_realm__yarn_app_result t0 where"));
+        assertTrue(sql3.contains("t0.username = ?"));
+        assertTrue(sql3.contains("t0.start_time >= ?"));
+        assertTrue(sql3.contains("t0.start_time <= ?"));
+        assertTrue(sql3.contains("order by t0.start_time desc"));
 
-      // Query by jobtype
-    searchParams.put(Application.JOB_TYPE, "Pig");
-    query2 = Application.generateSearchQuery("*", searchParams);
-    assertNotNull(query2.findList());
-    sql2 = query2.getGeneratedSql();
-    assertTrue(sql2.contains("select t0.id c0"));
-    assertTrue(sql2.contains("from yarn_app_result t0 where"));
-    assertTrue(sql2.contains("t0.username = ?"));
-    assertTrue(sql2.contains("t0.job_type = ?"));
-    assertTrue(sql2.contains("order by t0.finish_time desc"));
-
-    // Query by username, jobtype and start time
-    searchParams.put(Application.STARTED_TIME_BEGIN, "1459713751000");
-    searchParams.put(Application.STARTED_TIME_END, "1459713751000");
-    Query<AppResult> query3 = Application.generateSearchQuery("*", searchParams);
-    assertNotNull(query3.findList());
-    String sql3 = query3.getGeneratedSql();
-    assertTrue(sql3.contains("select t0.id c0"));
-    assertTrue(sql3.contains("from yarn_app_result t0 where"));
-    assertTrue(sql3.contains("t0.username = ?"));
-    assertTrue(sql3.contains("t0.start_time >= ?"));
-    assertTrue(sql3.contains("t0.start_time <= ?"));
-    assertTrue(sql3.contains("order by t0.start_time desc"));
-
-    // Query by finish time
-    searchParams = new HashMap<String, String>();
-    searchParams.put(Application.FINISHED_TIME_BEGIN, "1459713751000");
-    searchParams.put(Application.FINISHED_TIME_END, "1459713751000");
-    Query<AppResult> query4 = Application.generateSearchQuery("*", searchParams);
-    assertNotNull(query4.findList());
-    String sql4 = query4.getGeneratedSql();
-    assertTrue(sql4.contains("select t0.id c0"));
-    assertTrue(sql4.contains("from yarn_app_result t0 where"));
-    assertTrue(sql4.contains("t0.finish_time >= ?"));
-    assertTrue(sql4.contains("t0.finish_time <= ?"));
-    assertTrue(sql4.contains("order by t0.finish_time desc"));
+        // Query by finish time
+        searchParams = new HashMap<String, String>();
+        searchParams.put(Application.FINISHED_TIME_BEGIN, "1459713751000");
+        searchParams.put(Application.FINISHED_TIME_END, "1459713751000");
+        Query<AppResult> query4 = Application.generateSearchQuery(realm, "*", searchParams);
+        assertNotNull(query4.findList());
+        String sql4 = query4.getGeneratedSql();
+        assertTrue(sql4.contains("select t0.id c0"));
+        assertTrue(sql4.contains("from test_realm__yarn_app_result t0 where"));
+        assertTrue(sql4.contains("t0.finish_time >= ?"));
+        assertTrue(sql4.contains("t0.finish_time <= ?"));
+        assertTrue(sql4.contains("order by t0.finish_time desc"));
+      }
+    });
   }
 }

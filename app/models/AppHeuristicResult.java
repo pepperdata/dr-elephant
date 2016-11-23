@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.util.Utils;
 
+import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.Model;
 
 
@@ -83,4 +84,40 @@ public class AppHeuristicResult extends Model {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "yarnAppHeuristicResult")
   public List<AppHeuristicResultDetails> yarnAppHeuristicResultDetails;
 
+  @Override
+  public boolean delete() {
+    throw new IllegalArgumentException("must use delete(String server)");
+  }
+
+  /**
+  @Override
+  public boolean deletePermanent() {
+    throw new IllegalArgumentException("deletePermanent not supported");
+  }
+  */
+
+  @Override
+  public void insert() {
+    throw new IllegalArgumentException("must use insert(String server)");
+  }
+
+  @Override
+  public void markAsDirty() {
+    throw new IllegalArgumentException("markAsDirty not supported");
+  }
+
+  @Override
+  public void refresh() {
+    throw new IllegalArgumentException("refresh not supported");
+  }
+
+  @Override
+  public void save() {
+    throw new IllegalArgumentException("save not supported");
+  }
+
+  @Override
+  public void update() {
+    throw new IllegalArgumentException("must use update(String server)");
+  }
 }

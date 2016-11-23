@@ -1,6 +1,7 @@
 package com.linkedin.drelephant
 
 class RealmContext extends play.mvc.PathBindable[RealmContext] {
+  def name: String = null
   def context: ElephantContext = null
 
   def bind(key: String, name: String): RealmContext = {
@@ -17,7 +18,7 @@ class RealmContext extends play.mvc.PathBindable[RealmContext] {
   }
 }
 
-class NamedRealmContext(val name: String, override val context: ElephantContext) extends RealmContext {
+class NamedRealmContext(override val name: String, override val context: ElephantContext) extends RealmContext {
   override def unbind(key: String): String = {
     name
   }

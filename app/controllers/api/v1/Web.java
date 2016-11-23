@@ -84,24 +84,24 @@ public class Web extends Controller {
 
     //Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {
-      _numJobsAnalyzed = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
-      _numJobsCritical = AppResult.find.where()
+      _numJobsAnalyzed = AppResult.find(realm.name()).where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
+      _numJobsCritical = AppResult.find(realm.name()).where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.CRITICAL.getValue())
         .findRowCount();
-      _numJobsSevere = AppResult.find.where()
+      _numJobsSevere = AppResult.find(realm.name()).where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.SEVERE.getValue())
         .findRowCount();
-      _numJobsModerate = AppResult.find.where()
+      _numJobsModerate = AppResult.find(realm.name()).where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.MODERATE.getValue())
         .findRowCount();
-      _numJobsLow = AppResult.find.where()
+      _numJobsLow = AppResult.find(realm.name()).where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.LOW.getValue())
         .findRowCount();
-      _numJobsNone = AppResult.find.where()
+      _numJobsNone = AppResult.find(realm.name()).where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.NONE.getValue())
         .findRowCount();
@@ -129,8 +129,8 @@ public class Web extends Controller {
    * @param maxApplications The max number of applications that should be fetched
    * @return The list of Applications that should for the given username limit by maxApplications
    */
-  private static List<AppResult> getApplications(String username, int maxApplications) {
-    List<AppResult> results = AppResult.find.select("*").where().eq(AppResult.TABLE.USERNAME, username).order()
+  private static List<AppResult> getApplications(RealmContext realm, String username, int maxApplications) {
+    List<AppResult> results = AppResult.find(realm.name()).select("*").where().eq(AppResult.TABLE.USERNAME, username).order()
         .desc(AppResult.TABLE.FINISH_TIME).setMaxRows(maxApplications).findList();
     return results;
   }
@@ -140,9 +140,9 @@ public class Web extends Controller {
    * @param maxApplications The max number of applications that should be fetched
    * @return The list of Applications limit by maxApplications
    */
-  private static List<AppResult> getApplications(int maxApplications) {
+  private static List<AppResult> getApplications(RealmContext realm, int maxApplications) {
     List<AppResult> results =
-        AppResult.find.select("*").order().desc(AppResult.TABLE.FINISH_TIME).setMaxRows(maxApplications).findList();
+        AppResult.find(realm.name()).select("*").order().desc(AppResult.TABLE.FINISH_TIME).setMaxRows(maxApplications).findList();
     return results;
   }
 
@@ -152,9 +152,9 @@ public class Web extends Controller {
    * @param maxApplications The max number of applications that should be fetched
    * @return The list of Applications scheduled by a scheduler that should be fetched for the given username limit by maxApplications
    */
-  private static List<AppResult> getSchedulerApplications(String username, int maxApplications) {
+  private static List<AppResult> getSchedulerApplications(RealmContext realm, String username, int maxApplications) {
     List<AppResult> results =
-        AppResult.find.select("*").where().eq(AppResult.TABLE.USERNAME, username).ne(AppResult.TABLE.FLOW_EXEC_ID, null)
+        AppResult.find(realm.name()).select("*").where().eq(AppResult.TABLE.USERNAME, username).ne(AppResult.TABLE.FLOW_EXEC_ID, null)
             .ne(AppResult.TABLE.FLOW_EXEC_ID, "").order().desc(AppResult.TABLE.FINISH_TIME).setMaxRows(maxApplications)
             .findList();
     return results;
@@ -165,9 +165,9 @@ public class Web extends Controller {
    * @param maxApplications The max number of applications that should be fetched
    * @return The list of Applications scheduled by a scheduler limit by maxApplications
    */
-  private static List<AppResult> getSchedulerApplications(int maxApplications) {
+  private static List<AppResult> getSchedulerApplications(RealmContext realm, int maxApplications) {
     List<AppResult> results =
-        AppResult.find.select("*").where().ne(AppResult.TABLE.FLOW_EXEC_ID, null).ne(AppResult.TABLE.FLOW_EXEC_ID, "")
+        AppResult.find(realm.name()).select("*").where().ne(AppResult.TABLE.FLOW_EXEC_ID, null).ne(AppResult.TABLE.FLOW_EXEC_ID, "")
             .order().desc(AppResult.TABLE.FINISH_TIME).setMaxRows(maxApplications).findList();
     return results;
   }
@@ -177,8 +177,8 @@ public class Web extends Controller {
    * @param flowExecId The flow execution id of the flow
    * @return The list of AppResult filtered by flow execution id
    */
-  private static List<AppResult> getRestFlowResultsFromFlowExecutionId(String flowExecId) {
-    List<AppResult> results = AppResult.find.select("*").where().eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecId).order()
+  private static List<AppResult> getRestFlowResultsFromFlowExecutionId(RealmContext realm, String flowExecId) {
+    List<AppResult> results = AppResult.find(realm.name()).select("*").where().eq(AppResult.TABLE.FLOW_EXEC_ID, flowExecId).order()
         .desc(AppResult.TABLE.FINISH_TIME).findList();
     return results;
   }
@@ -190,9 +190,9 @@ public class Web extends Controller {
    * @param jobExecId The job execution id of the job
    * @return The list of AppResult filtered by job execution id
    */
-  private static List<AppResult> getRestJobResultsFromJobExecutionId(String jobExecId) {
+  private static List<AppResult> getRestJobResultsFromJobExecutionId(RealmContext realm, String jobExecId) {
     List<AppResult> results =
-        AppResult.find.select(AppResult.getSearchFields()).where().eq(AppResult.TABLE.JOB_EXEC_ID, jobExecId).order()
+        AppResult.find(realm.name()).select(AppResult.getSearchFields()).where().eq(AppResult.TABLE.JOB_EXEC_ID, jobExecId).order()
             .desc(AppResult.TABLE.FINISH_TIME)
             .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, AppHeuristicResult.getSearchFields()).findList();
     return results;
@@ -203,8 +203,8 @@ public class Web extends Controller {
    * @param applicationId The application id of the application
    * @return The AppResult for the given application Id
    */
-  private static AppResult getAppResultFromApplicationId(String applicationId) {
-    AppResult result = AppResult.find.select("*").fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
+  private static AppResult getAppResultFromApplicationId(RealmContext realm, String applicationId) {
+    AppResult result = AppResult.find(realm.name()).select("*").fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS, "*")
         .fetch(AppResult.TABLE.APP_HEURISTIC_RESULTS + "." + AppHeuristicResult.TABLE.APP_HEURISTIC_RESULT_DETAILS, "*")
         .where().idEq(applicationId).order().desc(AppResult.TABLE.FINISH_TIME).findUnique();
     return result;
@@ -284,9 +284,9 @@ public class Web extends Controller {
 
     List<AppResult> results = null;
     if (username == null || username.isEmpty()) {
-      results = getApplications(MAX_APPLICATIONS);
+      results = getApplications(realm, MAX_APPLICATIONS);
     } else {
-      results = getApplications(username, MAX_APPLICATIONS);
+      results = getApplications(realm, username, MAX_APPLICATIONS);
     }
 
     for (AppResult application : results) {
@@ -364,9 +364,9 @@ public class Web extends Controller {
 
     List<AppResult> results = null;
     if (username == null || username.isEmpty()) {
-      results = getSchedulerApplications(MAX_APPLICATIONS_IN_WORKFLOW);
+      results = getSchedulerApplications(realm, MAX_APPLICATIONS_IN_WORKFLOW);
     } else {
-      results = getSchedulerApplications(username, MAX_APPLICATIONS_IN_WORKFLOW);
+      results = getSchedulerApplications(realm, username, MAX_APPLICATIONS_IN_WORKFLOW);
     }
 
     Map<IdUrlPair, List<AppResult>> jobExecIdToJobsMap = ControllerUtil
@@ -513,9 +513,9 @@ public class Web extends Controller {
     JsonArray workflowSummaryArray = new JsonArray();
     List<AppResult> results = null;
     if (username == null || username.isEmpty()) {
-      results = getSchedulerApplications(MAX_APPLICATIONS_IN_WORKFLOW);
+      results = getSchedulerApplications(realm, MAX_APPLICATIONS_IN_WORKFLOW);
     } else {
-      results = getSchedulerApplications(username, MAX_APPLICATIONS_IN_WORKFLOW);
+      results = getSchedulerApplications(realm, username, MAX_APPLICATIONS_IN_WORKFLOW);
     }
 
     Map<IdUrlPair, List<AppResult>> flowExecIdToJobsMap = ControllerUtil
@@ -681,7 +681,7 @@ public class Web extends Controller {
     String wfQueueName = "";
     String wfSchedulerName = "";
 
-    List<AppResult> results = getRestFlowResultsFromFlowExecutionId(flowId);
+    List<AppResult> results = getRestFlowResultsFromFlowExecutionId(realm, flowId);
 
     if (results.isEmpty()) {
       JsonObject parent = new JsonObject();
@@ -942,7 +942,7 @@ public class Web extends Controller {
     String queueName = "";
     String scheduler = "";
 
-    List<AppResult> results = getRestJobResultsFromJobExecutionId(jobid);
+    List<AppResult> results = getRestJobResultsFromJobExecutionId(realm, jobid);
 
     if (results.isEmpty()) {
       JsonObject parent = new JsonObject();
@@ -1131,7 +1131,7 @@ public class Web extends Controller {
     JsonObject applicationObject = new JsonObject();
     JsonArray heuristicsArray = new JsonArray();
 
-    AppResult result = getAppResultFromApplicationId(applicationid);
+    AppResult result = getAppResultFromApplicationId(realm, applicationid);
 
     if (result == null) {
       JsonObject parent = new JsonObject();
@@ -1399,7 +1399,7 @@ public class Web extends Controller {
     }
 
     Query<AppResult> query =
-        Application.generateSearchQuery(AppResult.getSearchFields(), Application.getSearchParams());
+        Application.generateSearchQuery(realm, AppResult.getSearchFields(), Application.getSearchParams());
 
     total = query.findRowCount();
 

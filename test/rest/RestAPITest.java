@@ -45,6 +45,7 @@ import static play.test.Helpers.testServer;
 
 import mockit.Mocked;
 import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.RealmEbeanContext;
 
 /**
  * <p>
@@ -72,9 +73,7 @@ public class RestAPITest {
     dbConn.put(EVOLUTION_PLUGIN_KEY, EVOLUTION_PLUGIN_VALUE);
     dbConn.put(APPLY_EVOLUTIONS_DEFAULT_KEY, APPLY_EVOLUTIONS_DEFAULT_VALUE);
 
-    ElephantContext.add("test-realm", elephantContext);
-
-    GlobalSettings gs = new GlobalSettings() {
+    GlobalSettings gs = new play.GlobalSettings() {
       @Override
       public void onStart(Application app) {
         logger.info("Starting FakeApplication");
@@ -82,6 +81,7 @@ public class RestAPITest {
     };
 
     fakeApp = fakeApplication(dbConn, gs);
+    new RealmEbeanContext("test-realm", fakeApp.configuration());
   }
 
   private WSResponse waitFor(java.util.concurrent.CompletionStage<WSResponse> response) {

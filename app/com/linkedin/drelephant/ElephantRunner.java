@@ -77,7 +77,8 @@ public class ElephantRunner implements Runnable {
 
   private void loadAnalyticJobGenerator() {
     if (HadoopSystemContext.isHadoop2Env()) {
-      _analyticJobGenerator = new AnalyticJobGeneratorHadoop2(ElephantContext.instance("test-realm"));
+      RealmContext realm = new RealmContext().bind("realm", "test-realm");
+      _analyticJobGenerator = new AnalyticJobGeneratorHadoop2(realm);
     } else {
       throw new RuntimeException("Unsupported Hadoop major version detected. It is not 2.x.");
     }

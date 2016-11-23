@@ -21,6 +21,7 @@ import com.linkedin.drelephant.analysis.Severity;
 
 import com.linkedin.drelephant.util.Utils;
 import java.util.Date;
+import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.Model;
 
 import java.util.List;
@@ -57,7 +58,7 @@ public class AppResult extends Model {
     public static final String ID = "id";
     public static final String NAME = "name";
     public static final String USERNAME = "username";
-      public static final String QUEUE_NAME = "queueName";
+    public static final String QUEUE_NAME = "queueName";
     public static final String START_TIME = "startTime";
     public static final String FINISH_TIME = "finishTime";
     public static final String TRACKING_URL = "trackingUrl";
@@ -163,5 +164,44 @@ public class AppResult extends Model {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "yarnAppResult")
   public List<AppHeuristicResult> yarnAppHeuristicResults;
 
-  public static Finder<String, AppResult> find = new Finder<String, AppResult>(String.class, AppResult.class);
+  public static Finder<String, AppResult> find(String serverName) {
+    return new Finder<String, AppResult>(serverName, String.class, AppResult.class);
+  }
+
+  @Override
+  public boolean delete() {
+    throw new IllegalArgumentException("must use delete(String server)");
+  }
+
+  /**
+  @Override
+  public boolean deletePermanent() {
+    throw new IllegalArgumentException("deletePermanent not supported");
+  }
+  */
+
+  @Override
+  public void insert() {
+    throw new IllegalArgumentException("must use insert(String server)");
+  }
+
+  @Override
+  public void markAsDirty() {
+    throw new IllegalArgumentException("markAsDirty not supported");
+  }
+
+  @Override
+  public void refresh() {
+    throw new IllegalArgumentException("refresh not supported");
+  }
+
+  @Override
+  public void save() {
+    throw new IllegalArgumentException("save not supported");
+  }
+
+  @Override
+  public void update() {
+    throw new IllegalArgumentException("must use update(String server)");
+  }
 }

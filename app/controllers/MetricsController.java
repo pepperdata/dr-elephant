@@ -105,7 +105,7 @@ public class MetricsController extends Controller {
       public Integer getValue() {
         long now = System.currentTimeMillis();
         if (now - _lastUpdate > UPDATE_DELAY) {
-          _count = AppResult.find.where()
+          _count = AppResult.find("replace_this").where() // TODO: realm.name()
                   .gt(AppResult.TABLE.FINISH_TIME, now - DAY)
                   .findRowCount();
           _lastUpdate = now;

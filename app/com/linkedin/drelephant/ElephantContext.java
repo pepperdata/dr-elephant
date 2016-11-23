@@ -52,7 +52,6 @@ import org.w3c.dom.Document;
 import play.api.Play;
 import play.twirl.api.Html;
 
-
 /**
  * This is a general singleton instance that provides globally accessible resources.
  *
@@ -83,11 +82,12 @@ public class ElephantContext {
   private Map<ApplicationType, List<JobType>> _appTypeToJobTypes = new HashMap<ApplicationType, List<JobType>>();
 
   public static void init() {
-    add("test-realm", new ElephantContext());
+    add("test-realm", new ElephantContext(), play.Play.application().configuration());
   }
 
-  public static void add(String name, ElephantContext context) {
+  public static void add(String name, ElephantContext context, play.Configuration appConfig) {
     INSTANCE_MAP.put(name, context);
+    new RealmEbeanContext(name, appConfig);
   }
 
   public static ElephantContext instance(String name) {

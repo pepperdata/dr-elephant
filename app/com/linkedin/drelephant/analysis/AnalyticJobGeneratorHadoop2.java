@@ -16,7 +16,7 @@
 
 package com.linkedin.drelephant.analysis;
 
-import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.RealmContext;
 import com.linkedin.drelephant.math.Statistics;
 import controllers.MetricsController;
 import java.io.IOException;
@@ -56,7 +56,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   private static final long TOKEN_UPDATE_INTERVAL =
       Statistics.MINUTE_IN_MS * 30 + new Random().nextLong() % (3 * Statistics.MINUTE_IN_MS);
 
-  private final ElephantContext context;
+  private final RealmContext realm;
   private String _resourceManagerAddress;
   private long _lastTime = 0;
   private long _currentTime = 0;
@@ -67,8 +67,8 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
   private final Queue<AnalyticJob> _retryQueue = new ConcurrentLinkedQueue<AnalyticJob>();
 
-  public AnalyticJobGeneratorHadoop2(ElephantContext context) {
-    this.context = context;
+  public AnalyticJobGeneratorHadoop2(RealmContext realm) {
+    this.realm = realm;
   }
 
   public void updateResourceManagerAddresses() {
@@ -215,7 +215,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
 
       // When called first time after launch, hit the DB and avoid duplicated analytic jobs that have been analyzed
       // before.
-      if (_lastTime > 0 || (_lastTime == 0 && AppResult.find.byId(appId) == null)) {
+      if (_lastTime > 0 || (_lastTime == 0 && AppResult.find(realm.name()).byId(appId) == null)) {
         String user = app.get("user").getValueAsText();
         String name = app.get("name").getValueAsText();
         String queueName = app.get("queue").getValueAsText();
@@ -224,11 +224,11 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         long finishTime = app.get("finishedTime").getLongValue();
 
         ApplicationType type =
-            context.getApplicationTypeForName(app.get("applicationType").getValueAsText());
+            realm.context().getApplicationTypeForName(app.get("applicationType").getValueAsText());
 
         // If the application type is supported
         if (type != null) {
-          AnalyticJob analyticJob = new AnalyticJob(context);
+          AnalyticJob analyticJob = new AnalyticJob(realm.context());
           analyticJob.setAppId(appId).setAppType(type).setUser(user).setName(name).setQueueName(queueName)
               .setTrackingUrl(trackingUrl).setStartTime(startTime).setFinishTime(finishTime);
 
