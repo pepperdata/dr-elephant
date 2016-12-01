@@ -75,6 +75,8 @@ object Dependencies {
     "io.dropwizard.metrics" % "metrics-core" % "3.1.2",
     "io.dropwizard.metrics" % "metrics-healthchecks" % "3.1.2",
     "org.mockito" % "mockito-core" % "1.10.19",
+    "org.avaje.ebean" % "ebean" % "9.2.1",
+    "org.avaje.ebean" % "persistence-api" % "2.1.3",
     "org.jmockit" % "jmockit" % "1.23" % Test
   ) :+ sparkExclusion 
 

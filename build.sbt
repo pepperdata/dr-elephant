@@ -34,6 +34,12 @@ javaOptions in Test += "-javaagent:lib_managed/jars/org.jmockit/jmockit/jmockit-
 
 libraryDependencies ++= dependencies
 
+excludeDependencies ++= Seq(
+  "javax.persistence" % "persistence-api",
+  "org.avaje.ebeanorm" % "avaje-ebeanorm",
+  "org.avaje.ebeanorm" % "avaje-ebeanorm-agent"
+)
+
 // Create a new custom configuration called compileonly
 ivyConfigurations += config("compileonly").hide
 
