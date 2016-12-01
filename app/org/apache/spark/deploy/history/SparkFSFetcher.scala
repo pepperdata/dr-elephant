@@ -23,6 +23,7 @@ import java.io.{IOException, BufferedInputStream, InputStream}
 import java.{io, util}
 import java.util.ArrayList
 import javax.ws.rs.core.UriBuilder
+import com.linkedin.drelephant.ElephantContext
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.security.HadoopSecurity
 import com.linkedin.drelephant.spark.data.SparkApplicationData
@@ -52,7 +53,7 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * A wrapper that replays Spark event history from files and then fill proper data objects.
  */
-class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends ElephantFetcher[SparkApplicationData] {
+class SparkFSFetcher(context: ElephantContext, fetcherConfData: FetcherConfigurationData) extends ElephantFetcher[SparkApplicationData] {
 
   import SparkFSFetcher._
 
@@ -81,7 +82,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
    * properties in the configuration files. Triggering it too early will sometimes make the configuration object empty.
    */
   private lazy val _logDir: String = {
-    val conf = new Configuration()
+    val conf = context.getGeneralConf
     val nodeAddress = getNamenodeAddress(conf);
     val hdfsAddress = if (nodeAddress == null) "" else "webhdfs://" + nodeAddress
 
@@ -176,10 +177,10 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
 
     // For test purpose, if no host presented, use the local file system.
     if (new URI(_logDir).getHost == null) {
-      FileSystem.getLocal(new Configuration())
+      FileSystem.getLocal(context.getGeneralConf)
     } else {
       val filesystem = new WebHdfsFileSystem()
-      filesystem.initialize(new URI(_logDir), new Configuration())
+      filesystem.initialize(new URI(_logDir), context.getGeneralConf)
       filesystem
     }
   }

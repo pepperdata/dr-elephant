@@ -21,7 +21,10 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 
@@ -36,9 +39,12 @@ import com.linkedin.drelephant.util.Utils;
 import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.Model;
 
+import com.avaje.ebean.annotation.Indices;
+import com.avaje.ebean.annotation.Index;
 
 @Entity
 @Table(name = "yarn_app_heuristic_result")
+@Indices(value = {@Index(columnNames={"heuristic_name","severity"})})
 public class AppHeuristicResult extends Model {
 
   private static final long serialVersionUID = 2L;
@@ -62,10 +68,12 @@ public class AppHeuristicResult extends Model {
 
   @JsonIgnore
   @Id
+  @GeneratedValue(strategy=GenerationType.IDENTITY)
   public int id;
 
   @JsonBackReference
   @ManyToOne(cascade = CascadeType.ALL)
+  @JoinColumn(nullable = false)
   public AppResult yarnAppResult;
 
   @Column(length = HEURISTIC_CLASS_LIMIT, nullable = false)
@@ -74,10 +82,10 @@ public class AppHeuristicResult extends Model {
   @Column(length = HEURISTIC_NAME_LIMIT, nullable = false)
   public String heuristicName;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TINYINT UNSIGNED")
   public Severity severity;
 
-  @Column(nullable = false)
+  @Column(nullable = true, columnDefinition = "MEDIUMINT UNSIGNED DEFAULT 0")
   public int score;
 
   @JsonManagedReference
@@ -89,12 +97,10 @@ public class AppHeuristicResult extends Model {
     throw new IllegalArgumentException("must use delete(String server)");
   }
 
-  /**
   @Override
   public boolean deletePermanent() {
     throw new IllegalArgumentException("deletePermanent not supported");
   }
-  */
 
   @Override
   public void insert() {
@@ -113,7 +119,11 @@ public class AppHeuristicResult extends Model {
 
   @Override
   public void save() {
-    throw new IllegalArgumentException("save not supported");
+    throw new IllegalArgumentException("must use save(String server)");
+  }
+
+  public void save(String server) {
+    db(server).save(this);
   }
 
   @Override

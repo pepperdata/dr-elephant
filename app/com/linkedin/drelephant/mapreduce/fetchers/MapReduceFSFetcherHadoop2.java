@@ -16,6 +16,7 @@
 
 package com.linkedin.drelephant.mapreduce.fetchers;
 
+import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.analysis.AnalyticJob;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
@@ -66,8 +67,8 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
   private String _intermediateHistoryLocation;
   private double _maxLogSizeInMB;
 
-  public MapReduceFSFetcherHadoop2(FetcherConfigurationData fetcherConfData) throws IOException {
-    super(fetcherConfData);
+  public MapReduceFSFetcherHadoop2(ElephantContext context, FetcherConfigurationData fetcherConfData) throws IOException {
+    super(context, fetcherConfData);
 
     _maxLogSizeInMB = DEFALUT_MAX_LOG_SIZE_IN_MB;
     if (fetcherConfData.getParamMap().get(LOG_SIZE_XML_FIELD) != null) {

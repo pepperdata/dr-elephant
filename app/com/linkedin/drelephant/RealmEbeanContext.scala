@@ -2,7 +2,7 @@ package com.linkedin.drelephant
 
 import com.avaje.ebean.EbeanServer
 import com.avaje.ebean.EbeanServerFactory
-import com.avaje.ebean.config.DataSourceConfig
+import org.avaje.datasource.DataSourceConfig
 import com.avaje.ebean.config.NamingConvention
 import com.avaje.ebean.config.ServerConfig
 import com.avaje.ebean.config.TableName

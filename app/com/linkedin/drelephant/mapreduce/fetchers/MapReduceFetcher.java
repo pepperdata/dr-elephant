@@ -16,6 +16,7 @@
 
 package com.linkedin.drelephant.mapreduce.fetchers;
 
+import com.linkedin.drelephant.ElephantContext;
 import com.linkedin.drelephant.analysis.ElephantFetcher;
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
@@ -33,7 +34,10 @@ public abstract class MapReduceFetcher implements ElephantFetcher<MapReduceAppli
   protected FetcherConfigurationData _fetcherConfigurationData;
   private boolean _samplingEnabled;
 
-  public MapReduceFetcher(FetcherConfigurationData fetcherConfData) {
+  protected final ElephantContext context;
+
+  public MapReduceFetcher(ElephantContext context, FetcherConfigurationData fetcherConfData) {
+    this.context = context;
     this._fetcherConfigurationData = fetcherConfData;
     this._samplingEnabled = Boolean.parseBoolean(
             fetcherConfData.getParamMap().get(SAMPLING_ENABLED_XML_FIELD));

@@ -33,9 +33,19 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.avaje.ebean.annotation.Indices;
+import com.avaje.ebean.annotation.Index;
 
 @Entity
 @Table(name = "yarn_app_result")
+@Indices(value = {@Index(columnNames={"finish_time"}),
+                  @Index(columnNames={"username", "finish_time"}),
+                  @Index(columnNames={"job_type", "username", "finish_time"}),
+                  @Index(columnNames={"flow_exec_id"}),
+                  @Index(columnNames={"job_def_id"}),
+                  @Index(columnNames={"flow_def_id"}),
+                  @Index(columnNames={"start_time"}),
+                  @Index(columnNames={"queue_name"})})
 public class AppResult extends Model {
 
   private static final long serialVersionUID = 1L;
@@ -97,13 +107,13 @@ public class AppResult extends Model {
   @Column(length = USERNAME_LIMIT, nullable = false)
   public String username;
 
-  @Column(length = QUEUE_NAME_LIMIT, nullable = false)
+  @Column(length = QUEUE_NAME_LIMIT, nullable = true)
   public String queueName;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "BIGINT UNSIGNED")
   public long startTime;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "BIGINT UNSIGNED")
   public long finishTime;
 
   @Column(length = TRACKING_URL_LIMIT, nullable = false)
@@ -112,13 +122,13 @@ public class AppResult extends Model {
   @Column(length = JOBTYPE_LIMIT, nullable = false)
   public String jobType;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TINYINT UNSIGNED")
   public Severity severity;
 
-  @Column(nullable = false)
+  @Column(nullable = true, columnDefinition = "MEDIUMINT UNSIGNED DEFAULT 0")
   public int score;
 
-  @Column(nullable = false)
+  @Column(nullable = true, columnDefinition = "TINYINT UNSIGNED DEFAULT 0")
   public int workflowDepth;
 
   @Column(length = SCHEDULER_LIMIT, nullable = true)
@@ -151,13 +161,13 @@ public class AppResult extends Model {
   @Column(length = URL_LEN_LIMIT, nullable = false)
   public String flowDefUrl;
 
-  @Column(nullable = true)
+  @Column(nullable = true, columnDefinition = "BIGINT UNSIGNED DEFAULT 0")
   public long resourceUsed;
 
-  @Column(nullable = true)
+  @Column(nullable = true, columnDefinition = "BIGINT UNSIGNED DEFAULT 0")
   public long resourceWasted;
 
-  @Column(nullable = true)
+  @Column(nullable = true, columnDefinition = "BIGINT UNSIGNED DEFAULT 0")
   public long totalDelay;
 
   @JsonManagedReference
@@ -165,7 +175,7 @@ public class AppResult extends Model {
   public List<AppHeuristicResult> yarnAppHeuristicResults;
 
   public static Finder<String, AppResult> find(String serverName) {
-    return new Finder<String, AppResult>(serverName, String.class, AppResult.class);
+    return new Finder<String, AppResult>(serverName, AppResult.class);
   }
 
   @Override
@@ -173,12 +183,10 @@ public class AppResult extends Model {
     throw new IllegalArgumentException("must use delete(String server)");
   }
 
-  /**
   @Override
   public boolean deletePermanent() {
     throw new IllegalArgumentException("deletePermanent not supported");
   }
-  */
 
   @Override
   public void insert() {
@@ -197,7 +205,11 @@ public class AppResult extends Model {
 
   @Override
   public void save() {
-    throw new IllegalArgumentException("save not supported");
+    throw new IllegalArgumentException("must use save(String server)");
+  }
+
+  public void save(String server) {
+    db(server).save(this);
   }
 
   @Override

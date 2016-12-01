@@ -32,8 +32,7 @@ public final class HadoopSystemContext {
    *
    * @return true if it is Hadoop 2 env, else false
    */
-  public static boolean isHadoop2Env() {
-    Configuration hadoopConf = new Configuration();
+  public static boolean isHadoop2Env(Configuration hadoopConf) {
     String hadoopVersion = hadoopConf.get(MAPREDUCE_FRAMEWORK_NAME_PROP);
     return hadoopVersion != null && hadoopVersion.equals(YARN);
   }
@@ -44,7 +43,7 @@ public final class HadoopSystemContext {
    * @param majorVersion the major version number of hadoop
    * @return true if we have a major version match else false
    */
-  public static boolean matchCurrentHadoopVersion(int majorVersion) {
-    return majorVersion == 2 && isHadoop2Env();
+  public static boolean matchCurrentHadoopVersion(Configuration hadoopConf, int majorVersion) {
+    return majorVersion == 2 && isHadoop2Env(hadoopConf);
   }
 }

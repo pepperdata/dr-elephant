@@ -17,11 +17,12 @@
 package org.apache.spark.deploy.history
 
 import java.net.URL;
+import com.linkedin.drelephant.ElephantContext
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import org.codehaus.jackson.JsonNode
 import org.codehaus.jackson.node.{ObjectNode, JsonNodeFactory}
 
-class DummySparkFSFetcher(val fetcherConfData: FetcherConfigurationData) extends SparkFSFetcher(fetcherConfData) {
+class DummySparkFSFetcher(context: ElephantContext, val fetcherConfData: FetcherConfigurationData) extends SparkFSFetcher(context, fetcherConfData) {
 
   override def readJsonNode(url: URL): JsonNode = {
 

@@ -81,9 +81,7 @@ public class ElephantContext {
   private final Map<String, Html> _heuristicToView = new HashMap<String, Html>();
   private Map<ApplicationType, List<JobType>> _appTypeToJobTypes = new HashMap<ApplicationType, List<JobType>>();
 
-  public static void init() {
-    add("test-realm", new ElephantContext(), play.Play.application().configuration());
-  }
+  protected final String name;
 
   public static void add(String name, ElephantContext context, play.Configuration appConfig) {
     INSTANCE_MAP.put(name, context);
@@ -94,18 +92,21 @@ public class ElephantContext {
     return INSTANCE_MAP.get(name);
   }
 
-  // private on purpose
-  protected ElephantContext() {
+  public ElephantContext(String name) {
+    this.name = name;
+  }
+
+  public void init() {
     loadConfiguration();
   }
 
   private void loadConfiguration() {
+    loadGeneralConf();
+
     loadAggregators();
     loadFetchers();
     loadHeuristics();
     loadJobTypes();
-
-    loadGeneralConf();
 
     // It is important to configure supported types in the LAST step so that we could have information from all
     // configurable components.
@@ -158,7 +159,7 @@ public class ElephantContext {
     for (FetcherConfigurationData data : _fetchersConfData) {
       try {
         Class<?> fetcherClass = Play.current().classloader().loadClass(data.getClassName());
-        Object instance = fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(data);
+        Object instance = fetcherClass.getConstructor(ElephantContext.class, FetcherConfigurationData.class).newInstance(this, data);
         if (!(instance instanceof ElephantFetcher)) {
           throw new IllegalArgumentException(
               "Class " + fetcherClass.getName() + " is not an implementation of " + ElephantFetcher.class.getName());
@@ -307,8 +308,10 @@ public class ElephantContext {
   private void loadGeneralConf() {
     logger.info("Loading configuration file " + GENERAL_CONF);
 
+    ClassLoader loader = this.getClass().getClassLoader();
     _generalConf = new Configuration();
-    _generalConf.addResource(this.getClass().getClassLoader().getResourceAsStream(GENERAL_CONF));
+    _generalConf.addResource(loader.getResourceAsStream(name + ".xml"));
+    _generalConf.addResource(loader.getResourceAsStream(GENERAL_CONF));
   }
 
   /**

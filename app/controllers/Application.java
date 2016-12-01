@@ -143,15 +143,15 @@ public class Application extends Controller {
 
     // Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {
-      _numJobsAnalyzed = AppResult.find(realm.name()).where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
+      _numJobsAnalyzed = AppResult.find(realm.name()).where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findCount();
       _numJobsCritical = AppResult.find(realm.name()).where()
           .gt(AppResult.TABLE.FINISH_TIME, finishDate)
           .eq(AppResult.TABLE.SEVERITY, Severity.CRITICAL.getValue())
-          .findRowCount();
+          .findCount();
       _numJobsSevere = AppResult.find(realm.name()).where()
           .gt(AppResult.TABLE.FINISH_TIME, finishDate)
           .eq(AppResult.TABLE.SEVERITY, Severity.SEVERE.getValue())
-          .findRowCount();
+          .findCount();
       _lastFetch = now;
     }
 
@@ -292,7 +292,7 @@ public class Application extends Controller {
       List<AppResult> resultsToDisplay = results.subList((currentPage - paginationBarStartIndex) * pageLength,
               Math.min(results.size(), (currentPage - paginationBarStartIndex + 1) * pageLength));
       return ok(searchPage.render(realm, paginationStats, searchResults.render(
-              realm, String.format("Results: Showing %,d of %,d", resultsToDisplay.size(), query.findRowCount()), resultsToDisplay)));
+              realm, String.format("Results: Showing %,d of %,d", resultsToDisplay.size(), query.findCount()), resultsToDisplay)));
     }
   }
 

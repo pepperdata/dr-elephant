@@ -34,9 +34,15 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.apache.hadoop.conf.Configuration;
 
+import mockit.Mocked;
+import com.linkedin.drelephant.ElephantContext;
+
 import static org.junit.Assert.assertEquals;
 
 public class SparkFsFetcherTest {
+
+  @Mocked(stubOutClassInitialization = true)
+  ElephantContext elephantContext = null;
 
   private static Document document1 = null;
   private static Document document2 = null;
@@ -93,7 +99,7 @@ public class SparkFsFetcherTest {
     FetcherConfigurationData data = fetcherConf.getFetchersConfigurationData().get(0);
     try {
       fetcherClass = SparkFsFetcherTest.class.getClassLoader().loadClass(data.getClassName());
-      Object sparkFetcherInstance = fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(data);
+      Object sparkFetcherInstance = fetcherClass.getConstructor(ElephantContext.class, FetcherConfigurationData.class).newInstance(elephantContext, data);
       if (!(sparkFetcherInstance instanceof ElephantFetcher)) {
         throw new IllegalArgumentException(
                 "Class " + fetcherClass.getName() + " is not an implementation of " + ElephantFetcher.class.getName());
@@ -132,7 +138,7 @@ public class SparkFsFetcherTest {
     FetcherConfigurationData data = fetcherConf.getFetchersConfigurationData().get(0);
     try {
       fetcherClass = SparkFsFetcherTest.class.getClassLoader().loadClass(data.getClassName());
-      Object sparkFetcherInstance = fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(data);
+      Object sparkFetcherInstance = fetcherClass.getConstructor(ElephantContext.class, FetcherConfigurationData.class).newInstance(elephantContext, data);
       if (!(sparkFetcherInstance instanceof ElephantFetcher)) {
         throw new IllegalArgumentException(
                 "Class " + fetcherClass.getName() + " is not an implementation of " + ElephantFetcher.class.getName());
@@ -173,7 +179,7 @@ public class SparkFsFetcherTest {
     FetcherConfigurationData data = fetcherConf.getFetchersConfigurationData().get(0);
     try {
       fetcherClass = SparkFsFetcherTest.class.getClassLoader().loadClass(data.getClassName());
-      Object sparkFetcherInstance = fetcherClass.getConstructor(FetcherConfigurationData.class).newInstance(data);
+      Object sparkFetcherInstance = fetcherClass.getConstructor(ElephantContext.class, FetcherConfigurationData.class).newInstance(elephantContext, data);
       if (!(sparkFetcherInstance instanceof ElephantFetcher)) {
         throw new IllegalArgumentException(
                 "Class " + fetcherClass.getName() + " is not an implementation of " + ElephantFetcher.class.getName());
@@ -200,7 +206,7 @@ public class SparkFsFetcherTest {
   @Test
   public void testGetNamenodeAddressFromHadoopConf() {
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document2.getDocumentElement());
-    DummySparkFSFetcher fetcher = new DummySparkFSFetcher(fetcherConf.getFetchersConfigurationData().get(0));
+    DummySparkFSFetcher fetcher = new DummySparkFSFetcher(elephantContext, fetcherConf.getFetchersConfigurationData().get(0));
     Configuration conf = new Configuration();
     String nameNode = fetcher.getNamenodeAddress(conf);
     assertEquals(nameNode,"sample-ha2.grid.company.com:50070");
@@ -210,7 +216,7 @@ public class SparkFsFetcherTest {
   @Test
   public void testGetNamenodeAddressFromFetcherConf() {
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document4.getDocumentElement());
-    DummySparkFSFetcher fetcher = new DummySparkFSFetcher(fetcherConf.getFetchersConfigurationData().get(0));
+    DummySparkFSFetcher fetcher = new DummySparkFSFetcher(elephantContext, fetcherConf.getFetchersConfigurationData().get(0));
     Configuration conf = new Configuration();
     String nameNode = fetcher.getNamenodeAddress(conf);
     assertEquals(nameNode,"sample-ha4.grid.company.com:50070");

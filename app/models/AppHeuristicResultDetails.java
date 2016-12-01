@@ -17,11 +17,14 @@
 package models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.Serializable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import javax.persistence.Table;
@@ -31,9 +34,13 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.Model;
 
+import com.avaje.ebean.annotation.Indices;
+import com.avaje.ebean.annotation.Index;
 
 @Entity
 @Table(name = "yarn_app_heuristic_result_details")
+@Indices(value = {@Index(columnNames={"yarn_app_heuristic_result_id","name"}, unique=true),
+                  @Index(columnNames={"name"})})
 public class AppHeuristicResultDetails extends Model {
 
   private static final long serialVersionUID = 3L;
@@ -50,17 +57,23 @@ public class AppHeuristicResultDetails extends Model {
     public static final String DETAILS = "details";
   }
 
+  @JsonIgnore
+  @Id
+  @GeneratedValue(strategy=GenerationType.IDENTITY)
+  public int id;
+
   @JsonBackReference
   @ManyToOne(cascade = CascadeType.ALL)
+  @JoinColumn(nullable = false, updatable = false)
   public AppHeuristicResult yarnAppHeuristicResult;
 
-  @Column(length=NAME_LIMIT, nullable = false)
+  @Column(length=NAME_LIMIT, nullable = false, updatable = false)
   public String name;
 
   @Column(length=VALUE_LIMIT, nullable = false)
   public String value;
 
-  @Column(nullable = true)
+  @Column(nullable = true, columnDefinition = "TEXT")
   public String details;
 
   @Override
@@ -68,12 +81,10 @@ public class AppHeuristicResultDetails extends Model {
     throw new IllegalArgumentException("must use delete(String server)");
   }
 
-  /**
   @Override
   public boolean deletePermanent() {
     throw new IllegalArgumentException("deletePermanent not supported");
   }
-  */
 
   @Override
   public void insert() {
@@ -92,7 +103,11 @@ public class AppHeuristicResultDetails extends Model {
 
   @Override
   public void save() {
-    throw new IllegalArgumentException("save not supported");
+    throw new IllegalArgumentException("must use save(String server)");
+  }
+
+  public void save(String server) {
+    db(server).save(this);
   }
 
   @Override

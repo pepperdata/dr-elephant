@@ -33,15 +33,23 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import mockit.Mocked;
 import com.linkedin.drelephant.ElephantContext;
+import com.linkedin.drelephant.RealmEbeanContext;
 
 public class MapReduceFSFetcherHadoop2Test {
 
   @Mocked(stubOutClassInitialization = true)
   ElephantContext elephantContext = null;
+
+  private static final Logger logger = LoggerFactory.getLogger(MapReduceFSFetcherHadoop2Test.class);
 
   private static Document document9 = null;
   private static Document document10 = null;
@@ -73,6 +81,7 @@ public class MapReduceFSFetcherHadoop2Test {
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document9.getDocumentElement());
     try {
       MapReduceFSFetcherHadoop2 fetcher = new MapReduceFSFetcherHadoop2(
+              elephantContext,
               fetcherConf.getFetchersConfigurationData().get(0));
       Assert.assertFalse("Sampling should be disabled in default", fetcher.isSamplingEnabled());
       Assert.assertEquals(fetcher.DEFALUT_MAX_LOG_SIZE_IN_MB, fetcher.getMaxLogSizeInMB(), 0.0001);
@@ -94,6 +103,7 @@ public class MapReduceFSFetcherHadoop2Test {
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document10.getDocumentElement());
     try {
       MapReduceFSFetcherHadoop2 fetcher = new MapReduceFSFetcherHadoop2(
+              elephantContext,
               fetcherConf.getFetchersConfigurationData().get(0));
       Assert.assertTrue("Failed to enable sampling", fetcher.isSamplingEnabled());
       Assert.assertEquals(200d, fetcher.getMaxLogSizeInMB(), 0.0001);
@@ -115,6 +125,7 @@ public class MapReduceFSFetcherHadoop2Test {
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document11.getDocumentElement());
     try {
       MapReduceFSFetcherHadoop2 fetcher = new MapReduceFSFetcherHadoop2(
+              elephantContext,
               fetcherConf.getFetchersConfigurationData().get(0));
       Assert.assertFalse("Sampling should be disabled in default", fetcher.isSamplingEnabled());
       Assert.assertEquals(fetcher.DEFALUT_MAX_LOG_SIZE_IN_MB, fetcher.getMaxLogSizeInMB(), 0.0001);
@@ -136,6 +147,7 @@ public class MapReduceFSFetcherHadoop2Test {
     FetcherConfiguration fetcherConf = new FetcherConfiguration(document9.getDocumentElement());
     try {
       MapReduceFSFetcherHadoop2 fetcher = new MapReduceFSFetcherHadoop2(
+              elephantContext,
               fetcherConf.getFetchersConfigurationData().get(0));
       Calendar timestamp = Calendar.getInstance();
       timestamp.set(2016, Calendar.JULY, 30);
