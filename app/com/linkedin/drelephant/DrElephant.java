@@ -18,25 +18,42 @@ package com.linkedin.drelephant;
 
 import java.io.IOException;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The main class which starts Dr. Elephant
  */
 public class DrElephant extends Thread {
-  private ElephantRunner _elephant;
+  private ThreadPoolExecutor _threadPoolExecutor;
+  private ElephantRunner _elephant_1;
+  private ElephantRunner _elephant_2;
 
   public DrElephant() throws IOException {
-    _elephant = new ElephantRunner();
+          ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("dr-el-thread-%d").build();
+          _threadPoolExecutor = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS,
+                  new LinkedBlockingQueue<Runnable>(), factory);
+
+    _elephant_1 = new ElephantRunner("test-realm-1");
+    _elephant_2 = new ElephantRunner("test-realm-2");
   }
 
   @Override
   public void run() {
-    _elephant.run();
+    _threadPoolExecutor.submit(_elephant_1);
+    _threadPoolExecutor.submit(_elephant_2);
   }
 
   public void kill() {
-    if (_elephant != null) {
-      _elephant.kill();
+    if (_elephant_1 != null) {
+      _elephant_1.kill();
+    }
+    if (_elephant_2 != null) {
+      _elephant_2.kill();
     }
   }
 }

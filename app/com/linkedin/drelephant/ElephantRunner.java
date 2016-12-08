@@ -67,7 +67,11 @@ public class ElephantRunner implements Runnable {
   private ThreadPoolExecutor _threadPoolExecutor;
   private AnalyticJobGenerator _analyticJobGenerator;
 
-  private final String name = "test-realm";
+  private final String name;
+
+  public ElephantRunner(String name) {
+    this.name = name;
+  }
 
   private void loadGeneralConfiguration() {
     Configuration configuration = ElephantContext.instance(name).getGeneralConf();
@@ -98,13 +102,13 @@ public class ElephantRunner implements Runnable {
   public void run() {
     logger.info("Dr.elephant has started");
     try {
-      _hadoopSecurity = new HadoopSecurity();
+      final ElephantContext context = new ElephantContext(name);
+      context.init();
+      _hadoopSecurity = new HadoopSecurity(context);
       _hadoopSecurity.doAs(new PrivilegedAction<Void>() {
         @Override
         public Void run() {
-          HDFSContext.load();
-          ElephantContext context = new ElephantContext(name);
-          context.init();
+          HDFSContext.load(context);
           ElephantContext.add(name, context, play.Play.application().configuration());
           loadGeneralConfiguration();
           loadAnalyticJobGenerator();
