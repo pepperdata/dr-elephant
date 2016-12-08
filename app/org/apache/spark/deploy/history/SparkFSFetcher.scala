@@ -171,7 +171,7 @@ class SparkFSFetcher(context: ElephantContext, fetcherConfData: FetcherConfigura
   }
 
 
-  private val _security = new HadoopSecurity()
+  private lazy val _security = new HadoopSecurity(context)
 
   private def fs: FileSystem = {
 

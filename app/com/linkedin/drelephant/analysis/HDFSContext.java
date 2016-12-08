@@ -16,12 +16,12 @@
 
 package com.linkedin.drelephant.analysis;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import java.io.IOException;
 
+import com.linkedin.drelephant.ElephantContext;
 
 /**
  * The HDFS Information
@@ -39,9 +39,9 @@ public final class HDFSContext {
   /**
    * Captures the HDFS Block Size
    */
-  public static void load() {
+  public static void load(ElephantContext context) {
     try {
-      HDFS_BLOCK_SIZE = FileSystem.get(new Configuration()).getDefaultBlockSize(new Path("/"));
+      HDFS_BLOCK_SIZE = FileSystem.get(context.getGeneralConf()).getDefaultBlockSize(new Path("/"));
     } catch (IOException e) {
       logger.error("Error getting FS Block Size!", e);
     }

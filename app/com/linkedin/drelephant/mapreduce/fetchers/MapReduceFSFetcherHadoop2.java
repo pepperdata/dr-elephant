@@ -79,7 +79,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     }
     logger.info("The history log limit of MapReduce application is set to " + _maxLogSizeInMB + " MB");
 
-    Configuration conf = new Configuration();
+    Configuration conf = new Configuration(); //context.getGeneralConf();
     this._fs = FileSystem.get(conf);
     this._historyLocation = conf.get("mapreduce.jobhistory.done-dir");
     this._intermediateHistoryLocation = conf.get("mapreduce.jobhistory.intermediate-done-dir");

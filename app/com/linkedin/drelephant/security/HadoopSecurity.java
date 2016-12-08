@@ -16,7 +16,6 @@
 
 package com.linkedin.drelephant.security;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 
@@ -25,6 +24,7 @@ import java.io.IOException;
 import java.security.PrivilegedAction;
 import play.Play;
 
+import com.linkedin.drelephant.ElephantContext;
 
 /**
  * The class handles authentication when cluster is security enabled
@@ -38,9 +38,8 @@ public class HadoopSecurity {
   private String _keytabUser;
   private boolean _securityEnabled = false;
 
-  public HadoopSecurity() throws IOException {
-    Configuration conf = new Configuration();
-    UserGroupInformation.setConfiguration(conf);
+  public HadoopSecurity(ElephantContext context) throws IOException {
+    UserGroupInformation.setConfiguration(context.getGeneralConf());
     _securityEnabled = UserGroupInformation.isSecurityEnabled();
     if (_securityEnabled) {
       logger.info("This cluster is Kerberos enabled.");
