@@ -127,7 +127,7 @@ public abstract class GenericMemoryHeuristic implements Heuristic<MapReduceAppli
               containerSizeStr.indexOf("}"));
           String realContainerSizeStr = data.getConf().getProperty(realContainerConf);
           try {
-            containerMem = Long.parseLong(data.getConf().getProperty(realContainerConf));
+            containerMem = Long.parseLong(realContainerSizeStr);
           }
           catch (NumberFormatException e1) {
             logger.warn(realContainerConf + ": expected number [" + realContainerSizeStr + "]");
