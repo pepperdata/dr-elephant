@@ -149,7 +149,7 @@ class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends Elephant
   def checkActivation(httpValue: String): Boolean = {
     val url: URL = new URL("http://" + httpValue + "/jmx?qry=Hadoop:service=NameNode,name=NameNodeStatus");
     val rootNode: JsonNode = readJsonNode(url);
-    val status: String = rootNode.path("beans").get(0).path("State").getValueAsText();
+    val status: String = rootNode.path("beans").get(0).path("State").asText();
     if (status.equals("active")) {
       return true;
     }

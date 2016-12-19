@@ -20,25 +20,34 @@ import com.linkedin.drelephant.schedulers.AirflowScheduler;
 import com.linkedin.drelephant.schedulers.AzkabanScheduler;
 import com.linkedin.drelephant.schedulers.Scheduler;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import play.test.FakeApplication;
+import play.Application;
 import play.test.Helpers;
 
 import static org.junit.Assert.assertEquals;
+import static common.TestConstants.*;
 
 
 public class InfoExtractorTest {
 
-  private FakeApplication app;
+  private Application app;
 
   @Before
   public void startApp() throws Exception {
-    app = Helpers.fakeApplication(Helpers.inMemoryDatabase());
+    Map<String, String> dbConn = new HashMap<String, String>();
+    dbConn.put(DB_DEFAULT_DRIVER_KEY, DB_DEFAULT_DRIVER_VALUE);
+    dbConn.put(DB_DEFAULT_URL_KEY, DB_DEFAULT_URL_VALUE);
+    dbConn.put(EVOLUTION_PLUGIN_KEY, EVOLUTION_PLUGIN_VALUE);
+    dbConn.put(APPLY_EVOLUTIONS_DEFAULT_KEY, APPLY_EVOLUTIONS_DEFAULT_VALUE);
+
+    app = Helpers.fakeApplication(dbConn);
     Helpers.start(app);
   }
 

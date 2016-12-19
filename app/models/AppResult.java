@@ -21,7 +21,7 @@ import com.linkedin.drelephant.analysis.Severity;
 
 import com.linkedin.drelephant.util.Utils;
 import java.util.Date;
-import play.db.ebean.Model;
+import com.avaje.ebean.Model;
 
 import java.util.List;
 
@@ -163,5 +163,5 @@ public class AppResult extends Model {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "yarnAppResult")
   public List<AppHeuristicResult> yarnAppHeuristicResults;
 
-  public static Finder<String, AppResult> find = new Finder<String, AppResult>(String.class, AppResult.class);
+  public static Finder<String, AppResult> find = new Finder<String, AppResult>(AppResult.class);
 }

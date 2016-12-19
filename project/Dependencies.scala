@@ -14,7 +14,7 @@
 // the License.
 //
 
-import play.Project._
+import play.sbt.PlayImport._
 import sbt._
 
 object Dependencies {
@@ -23,15 +23,15 @@ object Dependencies {
   lazy val commonsCodecVersion = "1.10"
   lazy val commonsIoVersion = "2.4"
   lazy val gsonVersion = "2.2.4"
-  lazy val guavaVersion = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
-  lazy val jacksonMapperAslVersion = "1.7.3"
+  lazy val guavaVersion = "19.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
+  lazy val jacksonMapperAslVersion = "1.9.13"
   lazy val jsoupVersion = "1.7.3"
   lazy val mysqlConnectorVersion = "5.1.36"
 
   lazy val HADOOP_VERSION = "hadoopversion"
   lazy val SPARK_VERSION = "sparkversion"
 
-  var hadoopVersion = "2.3.0"
+  var hadoopVersion = "2.7.3"
   if (System.getProperties.getProperty(HADOOP_VERSION) != null) {
     hadoopVersion = System.getProperties.getProperty(HADOOP_VERSION)
   }
@@ -42,14 +42,14 @@ object Dependencies {
   }
 
   val sparkExclusion = if (sparkVersion >= "1.5.0") {
-    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
+    "org.apache.spark" % "spark-core_2.11" % sparkVersion excludeAll(
       ExclusionRule(organization = "com.typesafe.akka"),
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
     )
   } else {
-    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
+    "org.apache.spark" % "spark-core_2.11" % sparkVersion excludeAll(
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
@@ -58,6 +58,7 @@ object Dependencies {
 
   // Dependency coordinates
   var requiredDep = Seq(
+    "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.7.6",
     "com.google.code.gson" % "gson" % gsonVersion,
     "com.google.guava" % "guava" % guavaVersion,
     "commons-codec" % "commons-codec" % commonsCodecVersion,
@@ -71,12 +72,18 @@ object Dependencies {
     "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % Test,
     "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
+    "org.avaje.ebean" % "ebean" % "9.2.1",
+    "org.avaje.ebean" % "persistence-api" % "2.1.3",
     "io.dropwizard.metrics" % "metrics-core" % "3.1.2",
     "io.dropwizard.metrics" % "metrics-healthchecks" % "3.1.2",
     "org.mockito" % "mockito-core" % "1.10.19",
     "org.jmockit" % "jmockit" % "1.23" % Test
   ) :+ sparkExclusion 
 
-  var dependencies = Seq(javaJdbc, javaEbean, cache)
+  var dependencies = Seq(
+    cache,
+    javaJdbc,
+    javaWs
+  )
   dependencies ++= requiredDep
 }

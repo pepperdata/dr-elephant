@@ -84,27 +84,27 @@ public class Web extends Controller {
 
     //Update statistics only after FETCH_DELAY
     if (now - _lastFetch > FETCH_DELAY) {
-      _numJobsAnalyzed = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findRowCount();
+      _numJobsAnalyzed = AppResult.find.where().gt(AppResult.TABLE.FINISH_TIME, finishDate).findCount();
       _numJobsCritical = AppResult.find.where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.CRITICAL.getValue())
-        .findRowCount();
+        .findCount();
       _numJobsSevere = AppResult.find.where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.SEVERE.getValue())
-        .findRowCount();
+        .findCount();
       _numJobsModerate = AppResult.find.where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.MODERATE.getValue())
-        .findRowCount();
+        .findCount();
       _numJobsLow = AppResult.find.where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.LOW.getValue())
-        .findRowCount();
+        .findCount();
       _numJobsNone = AppResult.find.where()
         .gt(AppResult.TABLE.FINISH_TIME, finishDate)
         .eq(AppResult.TABLE.SEVERITY, Severity.NONE.getValue())
-        .findRowCount();
+        .findCount();
       _lastFetch = now;
     }
 
@@ -1401,7 +1401,7 @@ public class Web extends Controller {
     Query<AppResult> query =
         Application.generateSearchQuery(AppResult.getSearchFields(), Application.getSearchParams());
 
-    total = query.findRowCount();
+    total = query.findCount();
 
     if (offset > total) {
       offset = total;

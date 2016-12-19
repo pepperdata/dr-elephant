@@ -14,18 +14,31 @@
 // the License.
 //
 
-import play.Project._
 import Dependencies._
+
+scalaVersion := "2.11.8"
 
 name := "dr-elephant"
 
 version := "2.0.6"
 
+lazy val root = (project in file(".")).enablePlugins(PlayJava, PlayEbean, SbtTwirl)
+
 organization := "com.linkedin.drelephant"
+
+retrieveManaged := true
 
 javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6")
 
+javaOptions in Test += "-javaagent:lib_managed/jars/org.jmockit/jmockit/jmockit-1.23.jar"
+
 libraryDependencies ++= dependencies
+
+excludeDependencies ++= Seq(
+  "javax.persistence" % "persistence-api",
+  "org.avaje.ebeanorm" % "avaje-ebeanorm",
+  "org.avaje.ebeanorm" % "avaje-ebeanorm-agent"
+)
 
 // Create a new custom configuration called compileonly
 ivyConfigurations += config("compileonly").hide
@@ -33,4 +46,4 @@ ivyConfigurations += config("compileonly").hide
 // Append all dependencies with 'compileonly' configuration to unmanagedClasspath in Compile.
 unmanagedClasspath in Compile ++= update.value.select(configurationFilter("compileonly"))
 
-playJavaSettings
+routesGenerator := StaticRoutesGenerator

@@ -22,13 +22,14 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-import play.db.ebean.Model;
+import com.avaje.ebean.Model;
 
 
 @Entity
@@ -48,6 +49,10 @@ public class AppHeuristicResultDetails extends Model {
     public static final String VALUE = "value";
     public static final String DETAILS = "details";
   }
+
+  @JsonIgnore
+  @Id
+  public int id;
 
   @JsonBackReference
   @ManyToOne(cascade = CascadeType.ALL)
