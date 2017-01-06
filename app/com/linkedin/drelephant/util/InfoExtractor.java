@@ -17,13 +17,9 @@
 package com.linkedin.drelephant.util;
 
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
-import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfiguration;
 import com.linkedin.drelephant.configurations.scheduler.SchedulerConfigurationData;
-import com.linkedin.drelephant.schedulers.AirflowScheduler;
-import com.linkedin.drelephant.schedulers.AzkabanScheduler;
 import com.linkedin.drelephant.schedulers.Scheduler;
-import com.linkedin.drelephant.spark.data.SparkApplicationData;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -34,7 +30,6 @@ import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 
 import models.AppResult;
-import play.api.Play;
 
 import com.linkedin.drelephant.mapreduce.data.MapReduceApplicationData;
 
@@ -73,7 +68,7 @@ public class InfoExtractor {
     if (properties != null) {
       for (SchedulerConfigurationData data : _configuredSchedulers) {
         try {
-          Class<?> schedulerClass = Play.current().classloader().loadClass(data.getClassName());
+          Class<?> schedulerClass = Class.forName(data.getClassName());
           Object instance = schedulerClass.getConstructor(String.class, Properties.class, SchedulerConfigurationData.class).newInstance(appId, properties, data);
           if (!(instance instanceof Scheduler)) {
             throw new IllegalArgumentException(
@@ -90,7 +85,7 @@ public class InfoExtractor {
         } catch (IllegalAccessException e) {
           throw new RuntimeException("Could not access constructor for class" + data.getClassName(), e);
         } catch (RuntimeException e) {
-          throw new RuntimeException(data.getClassName() + " is not a valid Fetcher class.", e);
+          throw new RuntimeException(data.getClassName() + " is not a valid Scheduler class.", e);
         } catch (InvocationTargetException e) {
           throw new RuntimeException("Could not invoke class " + data.getClassName(), e);
         } catch (NoSuchMethodException e) {
@@ -111,8 +106,6 @@ public class InfoExtractor {
     Properties properties = new Properties();
     if (data instanceof MapReduceApplicationData) {
       properties = retrieveMapreduceProperties((MapReduceApplicationData) data);
-    } else if (data instanceof SparkApplicationData) {
-      properties = retrieveSparkProperties((SparkApplicationData) data);
     }
 
     Scheduler scheduler = getSchedulerInstance(data.getAppId(), properties);
@@ -159,33 +152,6 @@ public class InfoExtractor {
    */
   public static Properties retrieveMapreduceProperties(MapReduceApplicationData appData) {
     return appData.getConf();
-  }
-
-  /**
-   * Retrieve the spark properties from SPARK_EXTRA_JAVA_OPTIONS
-   *
-   * @param appData the Spark Application Data
-   * @return The retrieved Spark properties
-   */
-  public static Properties retrieveSparkProperties(SparkApplicationData appData) {
-    String prop = appData.getEnvironmentData().getSparkProperty(SPARK_EXTRA_JAVA_OPTIONS);
-    Properties properties = new Properties();
-    if (prop != null) {
-      try {
-        Map<String, String> javaOptions = Utils.parseJavaOptions(prop);
-        for (String key : javaOptions.keySet()) {
-          properties.setProperty(key, unescapeString(javaOptions.get(key)));
-        }
-        logger.info("Parsed options:" + properties.toString());
-      } catch (IllegalArgumentException e) {
-        logger.error("Encountered error while parsing java options into urls: " + e.getMessage());
-      }
-    } else {
-      logger.error("Unable to retrieve the scheduler info for application [" +
-          appData.getGeneralData().getApplicationId() + "]. It does not contain [" + SPARK_EXTRA_JAVA_OPTIONS
-          + "] property in its spark properties.");
-    }
-    return properties;
   }
 
   /**
